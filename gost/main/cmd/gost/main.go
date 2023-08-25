@@ -71,25 +71,46 @@ func worker(id int, args []string, ctx *context.Context, ret *int) {
 func init() {
 	var printVersion bool
 	var listenPort string
+	var tproxyMode bool
+	var tproxyMark string
+	listenerParams := "?sniffing=true"
 
-	// flag.Var(&services, "L", "Listen addresses")
-	flag.StringVar(&listenPort, "P", "4128", "Listen port")
+	flag.StringVar(&listenPort, "P", "", "Listen port")
 	flag.Var(&nodes, "F", "Proxy server to forward the traffic to")
-	flag.StringVar(&metricsAddr, "metrics", "", "metrics service address")
-	flag.BoolVar(&printVersion, "V", false, "print version")
-	flag.BoolVar(&debug, "D", false, "debug mode")
+	flag.BoolVar(&tproxyMode, "T", false, "Run in TProxy mode")
+	flag.StringVar(&tproxyMark, "M", "100", "Mark to set for TPRoxy traffic")
+	flag.StringVar(&metricsAddr, "m", "", "Set a metrics service address (prometheus)")
+	flag.BoolVar(&printVersion, "V", false, "Show version")
+	flag.BoolVar(&debug, "D", false, "Enable debug mode")
 	flag.Parse()
 
-	services = []string{
-		fmt.Sprintf("redirect://127.0.0.1:%s", listenPort),
-		fmt.Sprintf("redirect://[::1]:%s", listenPort),
-		fmt.Sprintf("redu://127.0.0.1:%s", listenPort),
-		fmt.Sprintf("redu://[::1]:%s", listenPort),
+	if printVersion {
+		fmt.Printf("\nProxy-Forwarder Version: %s\nGost Version: %s\n\n", meta.VERSION_FWD, meta.VERSION_GOST)
+		os.Exit(0)
 	}
 
-	if printVersion {
-		fmt.Printf("Proxy-Forwarder Version: %s | Gost Version: %s", meta.VERSION_FWD, meta.VERSION_GOST)
-		os.Exit(0)
+	if listenPort == "" || len(nodes) == 0 {
+		fmt.Printf("Proxy-Forwarder %s\n\n", meta.VERSION_FWD)
+		fmt.Println("USAGE:")
+		fmt.Println("  -P 'Listen port' (required)")
+		fmt.Println("  -F 'Proxy server to forward the traffic to' (required, Example: 'http://192.168.0.1:3128')")
+		fmt.Println("  -T 'Run in TProxy mode' (default: false)")
+		fmt.Println("  -M 'Mark to set for TProxy traffic' (default: 100)")
+		fmt.Println("  -m 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')")
+		fmt.Println("  -V 'Show version'")
+		fmt.Printf("  -D 'Enable debug mode'\n\n")
+		os.Exit(1)
+	}
+
+	if tproxyMode {
+		listenerParams += fmt.Sprintf("tproxy=true&so_mark=%s", tproxyMark)
+	}
+
+	services = []string{
+		fmt.Sprintf("redirect://127.0.0.1:%s%s", listenPort, listenerParams),
+		fmt.Sprintf("redirect://[::1]:%s%s", listenPort, listenerParams),
+		fmt.Sprintf("redu://127.0.0.1:%s%s", listenPort, listenerParams),
+		fmt.Sprintf("redu://[::1]:%s%s", listenPort, listenerParams),
 	}
 
 	logger.SetDefault(xlogger.NewLogger())
