@@ -4,9 +4,9 @@ import (
 	"flag"
 	"log"
 
-	"github.com/go-gost/gosocks5"
+	"proxy_forwarder/gost/gosocks5"
 
-	"github.com/go-gost/gosocks5/client"
+	"proxy_forwarder/gost/gosocks5/client"
 )
 
 var (

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/go-gost/gosocks5"
+	"proxy_forwarder/gost/gosocks5"
 )
 
 var (
