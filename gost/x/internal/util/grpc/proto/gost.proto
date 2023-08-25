@@ -1,0 +1,10 @@
+syntax = "proto3";
+option go_package = "proxy_forwarder/gost/core/common/util/grpc/proto";
+
+message Chunk {
+  bytes data = 1;
+}
+
+service GostTunel {
+  rpc Tunnel (stream Chunk) returns (stream Chunk);
+}

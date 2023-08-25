@@ -1,0 +1,1811 @@
+basePath: /
+consumes:
+    - application/json
+definitions:
+    APIConfig:
+        properties:
+            accesslog:
+                type: boolean
+                x-go-name: AccessLog
+            addr:
+                type: string
+                x-go-name: Addr
+            auth:
+                $ref: '#/definitions/AuthConfig'
+            auther:
+                type: string
+                x-go-name: Auther
+            pathPrefix:
+                type: string
+                x-go-name: PathPrefix
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    AdmissionConfig:
+        properties:
+            file:
+                $ref: '#/definitions/FileLoader'
+            http:
+                $ref: '#/definitions/HTTPLoader'
+            matchers:
+                items:
+                    type: string
+                type: array
+                x-go-name: Matchers
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisLoader'
+            reload:
+                $ref: '#/definitions/Duration'
+            reverse:
+                description: DEPRECATED by whitelist since beta.4
+                type: boolean
+                x-go-name: Reverse
+            whitelist:
+                type: boolean
+                x-go-name: Whitelist
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    AuthConfig:
+        properties:
+            password:
+                type: string
+                x-go-name: Password
+            username:
+                type: string
+                x-go-name: Username
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    AutherConfig:
+        properties:
+            auths:
+                items:
+                    $ref: '#/definitions/AuthConfig'
+                type: array
+                x-go-name: Auths
+            file:
+                $ref: '#/definitions/FileLoader'
+            http:
+                $ref: '#/definitions/HTTPLoader'
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisLoader'
+            reload:
+                $ref: '#/definitions/Duration'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    BypassConfig:
+        properties:
+            file:
+                $ref: '#/definitions/FileLoader'
+            http:
+                $ref: '#/definitions/HTTPLoader'
+            matchers:
+                items:
+                    type: string
+                type: array
+                x-go-name: Matchers
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisLoader'
+            reload:
+                $ref: '#/definitions/Duration'
+            reverse:
+                description: DEPRECATED by whitelist since beta.4
+                type: boolean
+                x-go-name: Reverse
+            whitelist:
+                type: boolean
+                x-go-name: Whitelist
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ChainConfig:
+        properties:
+            hops:
+                description: |-
+                    REMOVED since beta.6
+                    Selector *SelectorConfig `yaml:",omitempty" json:"selector,omitempty"`
+                items:
+                    $ref: '#/definitions/HopConfig'
+                type: array
+                x-go-name: Hops
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            name:
+                type: string
+                x-go-name: Name
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ChainGroupConfig:
+        properties:
+            chains:
+                items:
+                    type: string
+                type: array
+                x-go-name: Chains
+            selector:
+                $ref: '#/definitions/SelectorConfig'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    Config:
+        properties:
+            admissions:
+                items:
+                    $ref: '#/definitions/AdmissionConfig'
+                type: array
+                x-go-name: Admissions
+            api:
+                $ref: '#/definitions/APIConfig'
+            authers:
+                items:
+                    $ref: '#/definitions/AutherConfig'
+                type: array
+                x-go-name: Authers
+            bypasses:
+                items:
+                    $ref: '#/definitions/BypassConfig'
+                type: array
+                x-go-name: Bypasses
+            chains:
+                items:
+                    $ref: '#/definitions/ChainConfig'
+                type: array
+                x-go-name: Chains
+            climiters:
+                items:
+                    $ref: '#/definitions/LimiterConfig'
+                type: array
+                x-go-name: CLimiters
+            hops:
+                items:
+                    $ref: '#/definitions/HopConfig'
+                type: array
+                x-go-name: Hops
+            hosts:
+                items:
+                    $ref: '#/definitions/HostsConfig'
+                type: array
+                x-go-name: Hosts
+            ingresses:
+                items:
+                    $ref: '#/definitions/IngressConfig'
+                type: array
+                x-go-name: Ingresses
+            limiters:
+                items:
+                    $ref: '#/definitions/LimiterConfig'
+                type: array
+                x-go-name: Limiters
+            log:
+                $ref: '#/definitions/LogConfig'
+            metrics:
+                $ref: '#/definitions/MetricsConfig'
+            profiling:
+                $ref: '#/definitions/ProfilingConfig'
+            recorders:
+                items:
+                    $ref: '#/definitions/RecorderConfig'
+                type: array
+                x-go-name: Recorders
+            resolvers:
+                items:
+                    $ref: '#/definitions/ResolverConfig'
+                type: array
+                x-go-name: Resolvers
+            rlimiters:
+                items:
+                    $ref: '#/definitions/LimiterConfig'
+                type: array
+                x-go-name: RLimiters
+            services:
+                items:
+                    $ref: '#/definitions/ServiceConfig'
+                type: array
+                x-go-name: Services
+            tls:
+                $ref: '#/definitions/TLSConfig'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ConnectorConfig:
+        properties:
+            auth:
+                $ref: '#/definitions/AuthConfig'
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            tls:
+                $ref: '#/definitions/TLSConfig'
+            type:
+                type: string
+                x-go-name: Type
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    DialerConfig:
+        properties:
+            auth:
+                $ref: '#/definitions/AuthConfig'
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            tls:
+                $ref: '#/definitions/TLSConfig'
+            type:
+                type: string
+                x-go-name: Type
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    Duration:
+        description: |-
+            A Duration represents the elapsed time between two instants
+            as an int64 nanosecond count. The representation limits the
+            largest representable duration to approximately 290 years.
+        format: int64
+        type: integer
+        x-go-package: time
+    FileLoader:
+        properties:
+            path:
+                type: string
+                x-go-name: Path
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    FileRecorder:
+        properties:
+            path:
+                type: string
+                x-go-name: Path
+            sep:
+                type: string
+                x-go-name: Sep
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ForwardNodeConfig:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            bypass:
+                type: string
+                x-go-name: Bypass
+            bypasses:
+                items:
+                    type: string
+                type: array
+                x-go-name: Bypasses
+            host:
+                type: string
+                x-go-name: Host
+            name:
+                type: string
+                x-go-name: Name
+            protocol:
+                type: string
+                x-go-name: Protocol
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ForwarderConfig:
+        properties:
+            name:
+                type: string
+                x-go-name: Name
+            nodes:
+                items:
+                    $ref: '#/definitions/ForwardNodeConfig'
+                type: array
+                x-go-name: Nodes
+            selector:
+                $ref: '#/definitions/SelectorConfig'
+            targets:
+                description: DEPRECATED by nodes since beta.4
+                items:
+                    type: string
+                type: array
+                x-go-name: Targets
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    HTTPLoader:
+        properties:
+            timeout:
+                $ref: '#/definitions/Duration'
+            url:
+                type: string
+                x-go-name: URL
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    HandlerConfig:
+        properties:
+            auth:
+                $ref: '#/definitions/AuthConfig'
+            auther:
+                type: string
+                x-go-name: Auther
+            authers:
+                items:
+                    type: string
+                type: array
+                x-go-name: Authers
+            chain:
+                type: string
+                x-go-name: Chain
+            chainGroup:
+                $ref: '#/definitions/ChainGroupConfig'
+            ingress:
+                type: string
+                x-go-name: Ingress
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            retries:
+                format: int64
+                type: integer
+                x-go-name: Retries
+            tls:
+                $ref: '#/definitions/TLSConfig'
+            type:
+                type: string
+                x-go-name: Type
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    HopConfig:
+        properties:
+            bypass:
+                type: string
+                x-go-name: Bypass
+            bypasses:
+                items:
+                    type: string
+                type: array
+                x-go-name: Bypasses
+            hosts:
+                type: string
+                x-go-name: Hosts
+            interface:
+                type: string
+                x-go-name: Interface
+            name:
+                type: string
+                x-go-name: Name
+            nodes:
+                items:
+                    $ref: '#/definitions/NodeConfig'
+                type: array
+                x-go-name: Nodes
+            resolver:
+                type: string
+                x-go-name: Resolver
+            selector:
+                $ref: '#/definitions/SelectorConfig'
+            sockopts:
+                $ref: '#/definitions/SockOptsConfig'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    HostMappingConfig:
+        properties:
+            aliases:
+                items:
+                    type: string
+                type: array
+                x-go-name: Aliases
+            hostname:
+                type: string
+                x-go-name: Hostname
+            ip:
+                type: string
+                x-go-name: IP
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    HostsConfig:
+        properties:
+            file:
+                $ref: '#/definitions/FileLoader'
+            http:
+                $ref: '#/definitions/HTTPLoader'
+            mappings:
+                items:
+                    $ref: '#/definitions/HostMappingConfig'
+                type: array
+                x-go-name: Mappings
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisLoader'
+            reload:
+                $ref: '#/definitions/Duration'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    IngressConfig:
+        properties:
+            file:
+                $ref: '#/definitions/FileLoader'
+            http:
+                $ref: '#/definitions/HTTPLoader'
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisLoader'
+            reload:
+                $ref: '#/definitions/Duration'
+            rules:
+                items:
+                    $ref: '#/definitions/IngressRuleConfig'
+                type: array
+                x-go-name: Rules
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    IngressRuleConfig:
+        properties:
+            endpoint:
+                type: string
+                x-go-name: Endpoint
+            hostname:
+                type: string
+                x-go-name: Hostname
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    LimiterConfig:
+        properties:
+            file:
+                $ref: '#/definitions/FileLoader'
+            http:
+                $ref: '#/definitions/HTTPLoader'
+            limits:
+                items:
+                    type: string
+                type: array
+                x-go-name: Limits
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisLoader'
+            reload:
+                $ref: '#/definitions/Duration'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ListenerConfig:
+        properties:
+            auth:
+                $ref: '#/definitions/AuthConfig'
+            auther:
+                type: string
+                x-go-name: Auther
+            authers:
+                items:
+                    type: string
+                type: array
+                x-go-name: Authers
+            chain:
+                type: string
+                x-go-name: Chain
+            chainGroup:
+                $ref: '#/definitions/ChainGroupConfig'
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            tls:
+                $ref: '#/definitions/TLSConfig'
+            type:
+                type: string
+                x-go-name: Type
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    LogConfig:
+        properties:
+            format:
+                type: string
+                x-go-name: Format
+            level:
+                type: string
+                x-go-name: Level
+            output:
+                type: string
+                x-go-name: Output
+            rotation:
+                $ref: '#/definitions/LogRotationConfig'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    LogRotationConfig:
+        properties:
+            compress:
+                description: |-
+                    Compress determines if the rotated log files should be compressed
+                    using gzip. The default is not to perform compression.
+                type: boolean
+                x-go-name: Compress
+            localTime:
+                description: |-
+                    LocalTime determines if the time used for formatting the timestamps in
+                    backup files is the computer's local time. The default is to use UTC
+                    time.
+                type: boolean
+                x-go-name: LocalTime
+            maxAge:
+                description: |-
+                    MaxAge is the maximum number of days to retain old log files based on the
+                    timestamp encoded in their filename.  Note that a day is defined as 24
+                    hours and may not exactly correspond to calendar days due to daylight
+                    savings, leap seconds, etc. The default is not to remove old log files
+                    based on age.
+                format: int64
+                type: integer
+                x-go-name: MaxAge
+            maxBackups:
+                description: |-
+                    MaxBackups is the maximum number of old log files to retain.  The default
+                    is to retain all old log files (though MaxAge may still cause them to get
+                    deleted.)
+                format: int64
+                type: integer
+                x-go-name: MaxBackups
+            maxSize:
+                description: |-
+                    MaxSize is the maximum size in megabytes of the log file before it gets
+                    rotated. It defaults to 100 megabytes.
+                format: int64
+                type: integer
+                x-go-name: MaxSize
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    MetricsConfig:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            path:
+                type: string
+                x-go-name: Path
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    NameserverConfig:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            chain:
+                type: string
+                x-go-name: Chain
+            clientIP:
+                type: string
+                x-go-name: ClientIP
+            hostname:
+                type: string
+                x-go-name: Hostname
+            prefer:
+                type: string
+                x-go-name: Prefer
+            timeout:
+                $ref: '#/definitions/Duration'
+            ttl:
+                $ref: '#/definitions/Duration'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    NodeConfig:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            bypass:
+                type: string
+                x-go-name: Bypass
+            bypasses:
+                items:
+                    type: string
+                type: array
+                x-go-name: Bypasses
+            connector:
+                $ref: '#/definitions/ConnectorConfig'
+            dialer:
+                $ref: '#/definitions/DialerConfig'
+            host:
+                type: string
+                x-go-name: Host
+            hosts:
+                type: string
+                x-go-name: Hosts
+            interface:
+                type: string
+                x-go-name: Interface
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            name:
+                type: string
+                x-go-name: Name
+            protocol:
+                type: string
+                x-go-name: Protocol
+            resolver:
+                type: string
+                x-go-name: Resolver
+            sockopts:
+                $ref: '#/definitions/SockOptsConfig'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ProfilingConfig:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    RecorderConfig:
+        properties:
+            file:
+                $ref: '#/definitions/FileRecorder'
+            name:
+                type: string
+                x-go-name: Name
+            redis:
+                $ref: '#/definitions/RedisRecorder'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    RecorderObject:
+        properties:
+            name:
+                type: string
+                x-go-name: Name
+            record:
+                type: string
+                x-go-name: Record
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    RedisLoader:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            db:
+                format: int64
+                type: integer
+                x-go-name: DB
+            key:
+                type: string
+                x-go-name: Key
+            password:
+                type: string
+                x-go-name: Password
+            type:
+                type: string
+                x-go-name: Type
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    RedisRecorder:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            db:
+                format: int64
+                type: integer
+                x-go-name: DB
+            key:
+                type: string
+                x-go-name: Key
+            password:
+                type: string
+                x-go-name: Password
+            type:
+                type: string
+                x-go-name: Type
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ResolverConfig:
+        properties:
+            name:
+                type: string
+                x-go-name: Name
+            nameservers:
+                items:
+                    $ref: '#/definitions/NameserverConfig'
+                type: array
+                x-go-name: Nameservers
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    Response:
+        properties:
+            code:
+                format: int64
+                type: integer
+                x-go-name: Code
+            msg:
+                type: string
+                x-go-name: Msg
+        type: object
+        x-go-package: proxy_forwarder/gost/x/api
+    SelectorConfig:
+        properties:
+            failTimeout:
+                $ref: '#/definitions/Duration'
+            maxFails:
+                format: int64
+                type: integer
+                x-go-name: MaxFails
+            strategy:
+                type: string
+                x-go-name: Strategy
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    ServiceConfig:
+        properties:
+            addr:
+                type: string
+                x-go-name: Addr
+            admission:
+                type: string
+                x-go-name: Admission
+            admissions:
+                items:
+                    type: string
+                type: array
+                x-go-name: Admissions
+            bypass:
+                type: string
+                x-go-name: Bypass
+            bypasses:
+                items:
+                    type: string
+                type: array
+                x-go-name: Bypasses
+            climiter:
+                type: string
+                x-go-name: CLimiter
+            forwarder:
+                $ref: '#/definitions/ForwarderConfig'
+            handler:
+                $ref: '#/definitions/HandlerConfig'
+            hosts:
+                type: string
+                x-go-name: Hosts
+            interface:
+                description: DEPRECATED by metadata.interface since beta.5
+                type: string
+                x-go-name: Interface
+            limiter:
+                type: string
+                x-go-name: Limiter
+            listener:
+                $ref: '#/definitions/ListenerConfig'
+            metadata:
+                additionalProperties: {}
+                type: object
+                x-go-name: Metadata
+            name:
+                type: string
+                x-go-name: Name
+            recorders:
+                items:
+                    $ref: '#/definitions/RecorderObject'
+                type: array
+                x-go-name: Recorders
+            resolver:
+                type: string
+                x-go-name: Resolver
+            rlimiter:
+                type: string
+                x-go-name: RLimiter
+            sockopts:
+                $ref: '#/definitions/SockOptsConfig'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    SockOptsConfig:
+        properties:
+            mark:
+                format: int64
+                type: integer
+                x-go-name: Mark
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+    TLSConfig:
+        properties:
+            caFile:
+                type: string
+                x-go-name: CAFile
+            certFile:
+                type: string
+                x-go-name: CertFile
+            commonName:
+                type: string
+                x-go-name: CommonName
+            keyFile:
+                type: string
+                x-go-name: KeyFile
+            organization:
+                type: string
+                x-go-name: Organization
+            secure:
+                type: boolean
+                x-go-name: Secure
+            serverName:
+                type: string
+                x-go-name: ServerName
+            validity:
+                $ref: '#/definitions/Duration'
+        type: object
+        x-go-package: proxy_forwarder/gost/x/config
+info:
+    title: Documentation of Web API.
+    version: 1.0.0
+paths:
+    /config:
+        get:
+            operationId: getConfigRequest
+            parameters:
+                - description: output format, one of yaml|json, default is json.
+                  in: query
+                  name: format
+                  type: string
+                  x-go-name: Format
+            responses:
+                "200":
+                    $ref: '#/responses/getConfigResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Get current config.
+            tags:
+                - Config
+        post:
+            operationId: saveConfigRequest
+            parameters:
+                - description: output format, one of yaml|json, default is yaml.
+                  in: query
+                  name: format
+                  type: string
+                  x-go-name: Format
+            responses:
+                "200":
+                    $ref: '#/responses/saveConfigResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Save current config to file (gost.yaml or gost.json).
+            tags:
+                - Config
+    /config/admissions:
+        post:
+            operationId: createAdmissionRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/AdmissionConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createAdmissionResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new admission, the name of admission must be unique in admission list.
+            tags:
+                - Admission
+    /config/admissions/{admission}:
+        delete:
+            operationId: deleteAdmissionRequest
+            parameters:
+                - in: path
+                  name: admission
+                  required: true
+                  type: string
+                  x-go-name: Admission
+            responses:
+                "200":
+                    $ref: '#/responses/deleteAdmissionResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete admission by name.
+            tags:
+                - Admission
+        put:
+            operationId: updateAdmissionRequest
+            parameters:
+                - in: path
+                  name: admission
+                  required: true
+                  type: string
+                  x-go-name: Admission
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/AdmissionConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateAdmissionResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update admission by name, the admission must already exist.
+            tags:
+                - Admission
+    /config/authers:
+        post:
+            operationId: createAutherRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/AutherConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createAutherResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new auther, the name of the auther must be unique in auther list.
+            tags:
+                - Auther
+    /config/authers/{auther}:
+        delete:
+            operationId: deleteAutherRequest
+            parameters:
+                - in: path
+                  name: auther
+                  required: true
+                  type: string
+                  x-go-name: Auther
+            responses:
+                "200":
+                    $ref: '#/responses/deleteAutherResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete auther by name.
+            tags:
+                - Auther
+        put:
+            operationId: updateAutherRequest
+            parameters:
+                - in: path
+                  name: auther
+                  required: true
+                  type: string
+                  x-go-name: Auther
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/AutherConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateAutherResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update auther by name, the auther must already exist.
+            tags:
+                - Auther
+    /config/bypasses:
+        post:
+            operationId: createBypassRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/BypassConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createBypassResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new bypass, the name of bypass must be unique in bypass list.
+            tags:
+                - Bypass
+    /config/bypasses/{bypass}:
+        delete:
+            operationId: deleteBypassRequest
+            parameters:
+                - in: path
+                  name: bypass
+                  required: true
+                  type: string
+                  x-go-name: Bypass
+            responses:
+                "200":
+                    $ref: '#/responses/deleteBypassResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete bypass by name.
+            tags:
+                - Bypass
+        put:
+            operationId: updateBypassRequest
+            parameters:
+                - in: path
+                  name: bypass
+                  required: true
+                  type: string
+                  x-go-name: Bypass
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/BypassConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateBypassResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update bypass by name, the bypass must already exist.
+            tags:
+                - Bypass
+    /config/chains:
+        post:
+            operationId: createChainRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/ChainConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createChainResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new chain, the name of chain must be unique in chain list.
+            tags:
+                - Chain
+    /config/chains/{chain}:
+        delete:
+            operationId: deleteChainRequest
+            parameters:
+                - in: path
+                  name: chain
+                  required: true
+                  type: string
+                  x-go-name: Chain
+            responses:
+                "200":
+                    $ref: '#/responses/deleteChainResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete chain by name.
+            tags:
+                - Chain
+        put:
+            operationId: updateChainRequest
+            parameters:
+                - in: path
+                  name: chain
+                  required: true
+                  type: string
+                  x-go-name: Chain
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/ChainConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateChainResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update chain by name, the chain must already exist.
+            tags:
+                - Chain
+    /config/climiters:
+        post:
+            operationId: createConnLimiterRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/LimiterConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createConnLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new conn limiter, the name of limiter must be unique in limiter list.
+            tags:
+                - Limiter
+    /config/climiters/{limiter}:
+        delete:
+            operationId: deleteConnLimiterRequest
+            parameters:
+                - in: path
+                  name: limiter
+                  required: true
+                  type: string
+                  x-go-name: Limiter
+            responses:
+                "200":
+                    $ref: '#/responses/deleteConnLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete conn limiter by name.
+            tags:
+                - Limiter
+        put:
+            operationId: updateConnLimiterRequest
+            parameters:
+                - in: path
+                  name: limiter
+                  required: true
+                  type: string
+                  x-go-name: Limiter
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/LimiterConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateConnLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update conn limiter by name, the limiter must already exist.
+            tags:
+                - Limiter
+    /config/hops:
+        post:
+            operationId: createHopRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/HopConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createHopResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new hop, the name of hop must be unique in hop list.
+            tags:
+                - Hop
+    /config/hops/{hop}:
+        delete:
+            operationId: deleteHopRequest
+            parameters:
+                - in: path
+                  name: hop
+                  required: true
+                  type: string
+                  x-go-name: Hop
+            responses:
+                "200":
+                    $ref: '#/responses/deleteHopResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete hop by name.
+            tags:
+                - Hop
+        put:
+            operationId: updateHopRequest
+            parameters:
+                - in: path
+                  name: hop
+                  required: true
+                  type: string
+                  x-go-name: Hop
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/HopConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateHopResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update hop by name, the hop must already exist.
+            tags:
+                - Hop
+    /config/hosts:
+        post:
+            operationId: createHostsRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/HostsConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createHostsResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new hosts, the name of the hosts must be unique in hosts list.
+            tags:
+                - Hosts
+    /config/hosts/{hosts}:
+        delete:
+            operationId: deleteHostsRequest
+            parameters:
+                - in: path
+                  name: hosts
+                  required: true
+                  type: string
+                  x-go-name: Hosts
+            responses:
+                "200":
+                    $ref: '#/responses/deleteHostsResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete hosts by name.
+            tags:
+                - Hosts
+        put:
+            operationId: updateHostsRequest
+            parameters:
+                - in: path
+                  name: hosts
+                  required: true
+                  type: string
+                  x-go-name: Hosts
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/HostsConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateHostsResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update hosts by name, the hosts must already exist.
+            tags:
+                - Hosts
+    /config/ingresses:
+        post:
+            operationId: createIngressRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/IngressConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createIngressResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new ingress, the name of the ingress must be unique in ingress list.
+            tags:
+                - Ingress
+    /config/ingresses/{ingress}:
+        delete:
+            operationId: deleteIngressRequest
+            parameters:
+                - in: path
+                  name: ingress
+                  required: true
+                  type: string
+                  x-go-name: Ingress
+            responses:
+                "200":
+                    $ref: '#/responses/deleteIngressResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete ingress by name.
+            tags:
+                - Ingress
+        put:
+            operationId: updateIngressRequest
+            parameters:
+                - in: path
+                  name: ingress
+                  required: true
+                  type: string
+                  x-go-name: Ingress
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/IngressConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateIngressResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update ingress by name, the ingress must already exist.
+            tags:
+                - Ingress
+    /config/limiters:
+        post:
+            operationId: createLimiterRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/LimiterConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new limiter, the name of limiter must be unique in limiter list.
+            tags:
+                - Limiter
+    /config/limiters/{limiter}:
+        delete:
+            operationId: deleteLimiterRequest
+            parameters:
+                - in: path
+                  name: limiter
+                  required: true
+                  type: string
+                  x-go-name: Limiter
+            responses:
+                "200":
+                    $ref: '#/responses/deleteLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete limiter by name.
+            tags:
+                - Limiter
+        put:
+            operationId: updateLimiterRequest
+            parameters:
+                - in: path
+                  name: limiter
+                  required: true
+                  type: string
+                  x-go-name: Limiter
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/LimiterConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update limiter by name, the limiter must already exist.
+            tags:
+                - Limiter
+    /config/resolvers:
+        post:
+            operationId: createResolverRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/ResolverConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createResolverResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new resolver, the name of the resolver must be unique in resolver list.
+            tags:
+                - Resolver
+    /config/resolvers/{resolver}:
+        delete:
+            operationId: deleteResolverRequest
+            parameters:
+                - in: path
+                  name: resolver
+                  required: true
+                  type: string
+                  x-go-name: Resolver
+            responses:
+                "200":
+                    $ref: '#/responses/deleteResolverResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete resolver by name.
+            tags:
+                - Resolver
+        put:
+            operationId: updateResolverRequest
+            parameters:
+                - in: path
+                  name: resolver
+                  required: true
+                  type: string
+                  x-go-name: Resolver
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/ResolverConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateResolverResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update resolver by name, the resolver must already exist.
+            tags:
+                - Resolver
+    /config/rlimiters:
+        post:
+            operationId: createRateLimiterRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/LimiterConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createRateLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new rate limiter, the name of limiter must be unique in limiter list.
+            tags:
+                - Limiter
+    /config/rlimiters/{limiter}:
+        delete:
+            operationId: deleteRateLimiterRequest
+            parameters:
+                - in: path
+                  name: limiter
+                  required: true
+                  type: string
+                  x-go-name: Limiter
+            responses:
+                "200":
+                    $ref: '#/responses/deleteRateLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete rate limiter by name.
+            tags:
+                - Limiter
+        put:
+            operationId: updateRateLimiterRequest
+            parameters:
+                - in: path
+                  name: limiter
+                  required: true
+                  type: string
+                  x-go-name: Limiter
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/LimiterConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateRateLimiterResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update rate limiter by name, the limiter must already exist.
+            tags:
+                - Limiter
+    /config/services:
+        post:
+            operationId: createServiceRequest
+            parameters:
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/ServiceConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/createServiceResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Create a new service, the name of the service must be unique in service list.
+            tags:
+                - Service
+    /config/services/{service}:
+        delete:
+            operationId: deleteServiceRequest
+            parameters:
+                - in: path
+                  name: service
+                  required: true
+                  type: string
+                  x-go-name: Service
+            responses:
+                "200":
+                    $ref: '#/responses/deleteServiceResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Delete service by name.
+            tags:
+                - Service
+        put:
+            operationId: updateServiceRequest
+            parameters:
+                - in: path
+                  name: service
+                  required: true
+                  type: string
+                  x-go-name: Service
+                - in: body
+                  name: data
+                  schema:
+                    $ref: '#/definitions/ServiceConfig'
+                  x-go-name: Data
+            responses:
+                "200":
+                    $ref: '#/responses/updateServiceResponse'
+            security:
+                - basicAuth:
+                    - '[]'
+            summary: Update service by name, the service must already exist.
+            tags:
+                - Service
+produces:
+    - application/json
+responses:
+    createAdmissionResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createAutherResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createBypassResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createChainResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createConnLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createHopResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createHostsResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createIngressResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createRateLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createResolverResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    createServiceResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteAdmissionResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteAutherResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteBypassResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteChainResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteConnLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteHopResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteHostsResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteIngressResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteRateLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteResolverResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    deleteServiceResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    getConfigResponse:
+        description: successful operation.
+        headers:
+            Config: {}
+        schema:
+            $ref: '#/definitions/Config'
+    saveConfigResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateAdmissionResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateAutherResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateBypassResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateChainResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateConnLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateHopResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateHostsResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateIngressResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateRateLimiterResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateResolverResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+    updateServiceResponse:
+        description: successful operation.
+        headers:
+            Data: {}
+        schema:
+            $ref: '#/definitions/Response'
+schemes:
+    - https
+    - http
+securityDefinitions:
+    basicAuth:
+        type: basic
+swagger: "2.0"
