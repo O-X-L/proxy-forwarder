@@ -21,16 +21,12 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Install python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-go@v4
         with:
-          python-version: '3.10'
+          go-version: '1.21'
+          cache: false
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements_lint.txt
-        shell: bash
-
-      - name: Running PyLint
-        run: pylint --recursive=y .
-        shell: bash
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
