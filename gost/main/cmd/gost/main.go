@@ -112,9 +112,9 @@ func init() {
 
 	if tproxyMode {
 		listenerParams += "&tproxy=true"
-	}
-	if tproxyMark != "" {
-		listenerParams += fmt.Sprintf("&so_mark=%s", tproxyMark)
+		if tproxyMark != "" {
+			listenerParams += fmt.Sprintf("&so_mark=%s", tproxyMark)
+		}
 	}
 
 	services = []string{

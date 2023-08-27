@@ -26,7 +26,7 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
   -P 'Listen port' (required)
   -F 'Proxy server to forward the traffic to' (required, Example: 'http://192.168.0.1:3128')
   -T 'Run in TProxy mode' (default: false)
-  -M 'Mark to set for TProxy traffic' (default: 100)
+  -M 'Mark to set for TProxy traffic' (default: None)
   -m 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')
   -V 'Show version'
   -D 'Enable debug mode'
