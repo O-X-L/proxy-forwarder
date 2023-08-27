@@ -120,6 +120,7 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 		}
 	}
 
+	fmt.Println("Handler red-tcp handle NON-HTTP/S")
 	log.Debugf("%s >> %s", conn.RemoteAddr(), dstAddr)
 
 	if h.options.Bypass != nil && h.options.Bypass.Contains(ctx, dstAddr.String()) {
@@ -145,14 +146,15 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 }
 
 func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, raddr net.Addr, log logger.Logger) error {
+	fmt.Println("Handler red-tcp handle HTTP")
 	req, err := http.ReadRequest(bufio.NewReader(rw))
 	if err != nil {
 		return err
 	}
 
-	if log.IsLevelEnabled(logger.TraceLevel) {
+	if log.IsLevelEnabled(logger.DebugLevel) {
 		dump, _ := httputil.DumpRequest(req, false)
-		log.Trace(string(dump))
+		log.Debug(string(dump))
 	}
 
 	host := req.Host
@@ -189,7 +191,7 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 	}
 
 	var rw2 io.ReadWriter = cc
-	if log.IsLevelEnabled(logger.TraceLevel) {
+	if log.IsLevelEnabled(logger.DebugLevel) {
 		var buf bytes.Buffer
 		resp, err := http.ReadResponse(bufio.NewReader(io.TeeReader(cc, &buf)), req)
 		if err != nil {
@@ -199,7 +201,7 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 		defer resp.Body.Close()
 
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Trace(string(dump))
+		log.Debug(string(dump))
 
 		rw2 = xio.NewReadWriter(io.MultiReader(&buf, cc), cc)
 	}
@@ -210,6 +212,7 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 }
 
 func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, raddr, dstAddr net.Addr, log logger.Logger) error {
+	fmt.Println("Handler red-tcp handle HTTPS")
 	buf := new(bytes.Buffer)
 	host, err := h.getServerName(ctx, io.TeeReader(rw, buf))
 	if err != nil {

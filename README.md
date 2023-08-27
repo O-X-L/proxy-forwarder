@@ -10,11 +10,13 @@ This tool is specifically designed to solve a problem when using proxy server:
 <img src="https://github.com/superstes/proxy-forwarder/blob/latest/docs/squid_remote.png" alt="Remote Proxy Server" width="600"/>
 </a>
 
+For more information about Squid see: `Superstes Wiki - Squid <https://wiki.superstes.eu/en/latest/1/network/squid.html>`_
+
 ----
 
 ## How does it work?
 
-This tool is based on top of [go-gost](https://gost.run/en/tutorials/redirect/) but I stripped all unecessary features/functions/dependencies from it.
+This tool is based on [go-gost](https://gost.run/en/tutorials/redirect/) but I stripped all unecessary features/functions/dependencies from it.
 
 See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gost.html)
 
@@ -57,5 +59,58 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
 * Run
 
   ```bash
-  proxy_forwarder -P 4138 -F http://127.0.0.1:3128
+  proxy_forwarder -P 4138 -F http://192.168.10.20:3128
   ```
+
+----
+
+## Squid
+
+This forwarder will always connect to the proxy using HTTP-Connect!
+
+So you need to make sure it is allowed by the proxy:
+
+```text
+acl CONNECT method CONNECT
+acl step1 at_step SslBump1
+http_access allow CONNECT step1
+# NOTE: without 'step1' one would be able to create a connect 'tunnel' through the proxy
+```
+
+----
+
+## Redirect
+
+### NFTables
+
+Full example when using 'TProxy' mode: [NFTables - TProxy](https://gist.github.com/superstes/6b7ed764482e4a8a75334f269493ac2e)
+
+```bash
+# whole input/forward traffic
+nft 'add chain nat prerouting { type nat hook prerouting priority -100; }'
+nft 'add rule nat prerouting tcp dport { 80, 443 } dnat to 127.0.0.1:3128'
+
+# whole output traffic - excluding the traffic for the proxy-forwarder itself (anti-loop)
+nft 'add chain nat output { type nat hook output priority -100; }'
+nft 'add rule nat output tcp dport { 80, 443 } meta skuid != 1100 dnat to 127.0.0.1:3128'
+
+# only output-traffic for one user to specific target (nice for testing purposes)
+nft 'add rule nat output meta l4proto tcp ip daddr 135.181.170.219 meta skuid 1000 dnat to 127.0.0.1:3128'
+```
+
+### IPTables
+
+Full example when using 'TProxy' mode: [IPTables - TProxy](https://gist.github.com/superstes/c4fefbf403f61812abf89165d7bc4000)
+
+```bash
+# whole input/forward traffic
+sudo iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:3128
+sudo iptables -t nat -I PREROUTING -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:3128
+
+# whole output traffic - excluding the traffic for the proxy-forwarder itself (anti-loop)
+sudo iptables -t nat -I OUTPUT -m owner ! --uid-owner 1100 -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:3128
+sudo iptables -t nat -I OUTPUT -m owner ! --uid-owner 1100 -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:3128
+
+# only output-traffic for one user to specific target (nice for testing purposes)
+sudo iptables -t nat -I OUTPUT -m owner --uid-owner 1000 -d 135.181.170.219 -p tcp -j DNAT --to-destination 127.0.0.1:3128
+```

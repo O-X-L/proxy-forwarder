@@ -110,15 +110,8 @@ func (r *Router) Options() *RouterOptions {
 }
 
 func (r *Router) Dial(ctx context.Context, network, address string) (conn net.Conn, err error) {
-	host := address
-	if h, _, _ := net.SplitHostPort(address); h != "" {
-		host = h
-	}
-	r.record(ctx, recorder.RecorderServiceRouterDialAddress, []byte(host))
-
 	conn, err = r.dial(ctx, network, address)
 	if err != nil {
-		r.record(ctx, recorder.RecorderServiceRouterDialAddressError, []byte(host))
 		return
 	}
 
@@ -128,23 +121,6 @@ func (r *Router) Dial(ctx context.Context, network, address string) (conn net.Co
 		}
 	}
 	return
-}
-
-func (r *Router) record(ctx context.Context, name string, data []byte) error {
-	if len(data) == 0 {
-		return nil
-	}
-
-	for _, rec := range r.options.Recorders {
-		if rec.Record == name {
-			err := rec.Recorder.Record(ctx, data)
-			if err != nil {
-				r.options.Logger.Errorf("record %s: %v", name, err)
-			}
-			return err
-		}
-	}
-	return nil
 }
 
 func (r *Router) dial(ctx context.Context, network, address string) (conn net.Conn, err error) {

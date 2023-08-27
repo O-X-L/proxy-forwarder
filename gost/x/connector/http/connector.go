@@ -48,7 +48,7 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 		"network": network,
 		"address": address,
 	})
-	log.Debugf("connect %s/%s", address, network)
+	log.Debugf("connect http %s/%s", address, network)
 
 	req := &http.Request{
 		Method:     http.MethodConnect,
@@ -78,17 +78,15 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 			log.Error(err)
 			return nil, err
 		}
-	case "udp", "udp4", "udp6":
-		req.Header.Set("X-Gost-Protocol", "udp")
 	default:
 		err := fmt.Errorf("network %s is unsupported", network)
 		log.Error(err)
 		return nil, err
 	}
 
-	if log.IsLevelEnabled(logger.TraceLevel) {
+	if log.IsLevelEnabled(logger.DebugLevel) {
 		dump, _ := httputil.DumpRequest(req, false)
-		log.Trace(string(dump))
+		log.Debug(string(dump))
 	}
 
 	if c.md.connectTimeout > 0 {
@@ -96,9 +94,14 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 		defer conn.SetDeadline(time.Time{})
 	}
 
-	req = req.WithContext(ctx)
+	// req = req.WithContext(ctx)
 	if err := req.Write(conn); err != nil {
 		return nil, err
+	}
+
+	if log.IsLevelEnabled(logger.DebugLevel) {
+		dump, _ := httputil.DumpRequest(req, false)
+		log.Debug(string(dump))
 	}
 
 	resp, err := http.ReadResponse(bufio.NewReader(conn), req)
@@ -110,13 +113,16 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 	// in this case, close body will be blocked, so we leave it untouched.
 	// defer resp.Body.Close()
 
-	if log.IsLevelEnabled(logger.TraceLevel) {
+	if log.IsLevelEnabled(logger.DebugLevel) {
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Trace(string(dump))
+		log.Debug(string(dump))
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s", resp.Status)
+	// if proxy 'tunnel' could not be established
+	if resp.StatusCode == 403 {
+		return nil, fmt.Errorf("upstream proxy denied the connection")
+	} else if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("upstream proxy connection failed with code %s", resp.Status)
 	}
 
 	return conn, nil

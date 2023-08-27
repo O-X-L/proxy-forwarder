@@ -73,12 +73,13 @@ func init() {
 	var listenPort string
 	var tproxyMode bool
 	var tproxyMark string
+	var forwardProxy string
 	listenerParams := "?sniffing=true"
 
 	flag.StringVar(&listenPort, "P", "", "Listen port")
-	flag.Var(&nodes, "F", "Proxy server to forward the traffic to")
+	flag.StringVar(&forwardProxy, "F", "", "Proxy server to forward the traffic to")
 	flag.BoolVar(&tproxyMode, "T", false, "Run in TProxy mode")
-	flag.StringVar(&tproxyMark, "M", "100", "Mark to set for TPRoxy traffic")
+	flag.StringVar(&tproxyMark, "M", "", "Mark to set for TPRoxy traffic")
 	flag.StringVar(&metricsAddr, "m", "", "Set a metrics service address (prometheus)")
 	flag.BoolVar(&printVersion, "V", false, "Show version")
 	flag.BoolVar(&debug, "D", false, "Enable debug mode")
@@ -89,21 +90,31 @@ func init() {
 		os.Exit(0)
 	}
 
-	if listenPort == "" || len(nodes) == 0 {
+	if listenPort == "" || forwardProxy == "" {
 		fmt.Printf("Proxy-Forwarder %s\n\n", meta.VERSION_FWD)
 		fmt.Println("USAGE:")
 		fmt.Println("  -P 'Listen port' (required)")
 		fmt.Println("  -F 'Proxy server to forward the traffic to' (required, Example: 'http://192.168.0.1:3128')")
 		fmt.Println("  -T 'Run in TProxy mode' (default: false)")
-		fmt.Println("  -M 'Mark to set for TProxy traffic' (default: 100)")
+		fmt.Println("  -M 'Mark to set for TProxy traffic' (default: None)")
 		fmt.Println("  -m 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')")
 		fmt.Println("  -V 'Show version'")
 		fmt.Printf("  -D 'Enable debug mode'\n\n")
 		os.Exit(1)
 	}
 
+	if !strings.HasPrefix(forwardProxy, "http://") && !strings.HasPrefix(forwardProxy, "https://") {
+		fmt.Println("The forward-proxy must include its protocol! (http/https)")
+		os.Exit(1)
+	}
+
+	nodes = []string{forwardProxy}
+
 	if tproxyMode {
-		listenerParams += fmt.Sprintf("tproxy=true&so_mark=%s", tproxyMark)
+		listenerParams += "&tproxy=true"
+	}
+	if tproxyMark != "" {
+		listenerParams += fmt.Sprintf("&so_mark=%s", tproxyMark)
 	}
 
 	services = []string{
