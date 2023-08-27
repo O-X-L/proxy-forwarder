@@ -1,6 +1,6 @@
 # Proxy Forwarder
 
-This tool is specifically designed to solve a problem when using proxy server:
+This tool is specifically designed to solve a problem when using proxy servers:
 
 * There is no clean way of forwarding traffic to a remote proxy server that is outside your layer 2 network
 * Some proxy servers (_like Squid_) do not support redirecting the traffic using DNAT
