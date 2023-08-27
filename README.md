@@ -10,7 +10,7 @@ This tool is specifically designed to solve a problem when using proxy servers:
 <img src="https://github.com/superstes/proxy-forwarder/blob/latest/docs/squid_remote.png" alt="Remote Proxy Server" width="600"/>
 </a>
 
-For more information about Squid see: `Superstes Wiki - Squid <https://wiki.superstes.eu/en/latest/1/network/squid.html>`_
+For more information about Squid see: [Superstes Wiki - Squid](https://wiki.superstes.eu/en/latest/1/network/squid.html)
 
 ----
 
