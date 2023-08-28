@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"proxy_forwarder/gost/core/handler"
-	"proxy_forwarder/gost/core/logger"
 	md "proxy_forwarder/gost/core/metadata"
 	netpkg "proxy_forwarder/gost/x/internal/net"
 	"proxy_forwarder/gost/x/registry"
+	"proxy_forwarder/meta"
 )
 
 func init() {
@@ -79,7 +79,7 @@ func (h *autoHandler) Handle(ctx context.Context, conn net.Conn, opts ...handler
 		"local":  conn.LocalAddr().String(),
 	})
 
-	if log.IsLevelEnabled(logger.DebugLevel) {
+	if meta.DEBUG {
 		start := time.Now()
 		log.Debugf("%s <> %s", conn.RemoteAddr(), conn.LocalAddr())
 		defer func() {

@@ -52,7 +52,12 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
 * Build the binary
 
   ```bash
-  bash scripts/build.sh
+  env GOOS=linux GOARCH=amd64 bash scripts/build.sh
+
+  # use 'CGO_ENABLED' if you see this error on the target system:
+  > error "/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32'" on target system
+
+  env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 bash scripts/build.sh
   ```
 
 * Copy the new binary to the target host(s)
@@ -66,15 +71,21 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
 
 ## Squid
 
-This forwarder will always connect to the proxy using HTTP-Connect!
+This forwarder will connect:
+
+* https over a HTTP-connect 'tunnel'
+* plain http without such a 'tunnel'
 
 So you need to make sure it is allowed by the proxy:
 
 ```text
 acl CONNECT method CONNECT
+acl ssl_ports port 443
 acl step1 at_step SslBump1
+
+http_access deny CONNECT !ssl_ports
 http_access allow CONNECT step1
-# NOTE: without 'step1' one would be able to create a connect 'tunnel' through the proxy
+# NOTE: without 'step1' one would be able to create a CONNECT 'tunnel' through the proxy
 ```
 
 ----

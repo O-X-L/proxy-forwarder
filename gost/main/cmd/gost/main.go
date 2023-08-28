@@ -11,8 +11,6 @@ import (
 	"strings"
 	"sync"
 
-	"proxy_forwarder/gost/core/logger"
-	xlogger "proxy_forwarder/gost/x/logger"
 	"proxy_forwarder/meta"
 
 	"github.com/judwhite/go-svc"
@@ -82,7 +80,7 @@ func init() {
 	flag.StringVar(&tproxyMark, "M", "", "Mark to set for TPRoxy traffic")
 	flag.StringVar(&metricsAddr, "m", "", "Set a metrics service address (prometheus)")
 	flag.BoolVar(&printVersion, "V", false, "Show version")
-	flag.BoolVar(&debug, "D", false, "Enable debug mode")
+	flag.BoolVar(&meta.DEBUG, "D", false, "Enable debug mode")
 	flag.Parse()
 
 	if printVersion {
@@ -124,7 +122,6 @@ func init() {
 		fmt.Sprintf("redu://[::1]:%s%s", listenPort, listenerParams),
 	}
 
-	logger.SetDefault(xlogger.NewLogger())
 }
 
 func main() {

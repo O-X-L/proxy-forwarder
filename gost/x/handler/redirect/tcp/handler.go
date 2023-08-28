@@ -11,22 +11,22 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"strings"
 	"time"
 
 	"proxy_forwarder/gost/core/chain"
 	"proxy_forwarder/gost/core/handler"
-	"proxy_forwarder/gost/core/logger"
 	md "proxy_forwarder/gost/core/metadata"
 	dissector "proxy_forwarder/gost/tls-dissector"
 	xio "proxy_forwarder/gost/x/internal/io"
 	netpkg "proxy_forwarder/gost/x/internal/net"
 	"proxy_forwarder/gost/x/registry"
+	"proxy_forwarder/log"
+	"proxy_forwarder/meta"
 )
 
 func init() {
-	registry.HandlerRegistry().Register("red", NewHandler)
-	registry.HandlerRegistry().Register("redir", NewHandler)
 	registry.HandlerRegistry().Register("redirect", NewHandler)
 }
 
@@ -62,18 +62,13 @@ func (h *redirectHandler) Init(md md.Metadata) (err error) {
 
 func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...handler.HandleOption) (err error) {
 	defer conn.Close()
+	logSrc := strings.Split(conn.LocalAddr().String(), ":")[0]
+	logDst := conn.RemoteAddr().String()
 
 	start := time.Now()
-	log := h.options.Logger.WithFields(map[string]any{
-		"remote": conn.RemoteAddr().String(),
-		"local":  conn.LocalAddr().String(),
-	})
-
-	log.Infof("%s <> %s", conn.RemoteAddr(), conn.LocalAddr())
+	log.ConnDebug("handler", logSrc, logDst, "connecting")
 	defer func() {
-		log.WithFields(map[string]any{
-			"duration": time.Since(start),
-		}).Infof("%s >< %s", conn.RemoteAddr(), conn.LocalAddr())
+		log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection finished after %s", time.Since(start)))
 	}()
 
 	if !h.checkRateLimit(conn.RemoteAddr()) {
@@ -87,14 +82,11 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 	} else {
 		dstAddr, err = h.getOriginalDstAddr(conn)
 		if err != nil {
-			log.Error(err)
+			log.ConnError("handler", logSrc, logDst, err)
 			return
 		}
 	}
-
-	log = log.WithFields(map[string]any{
-		"dst": fmt.Sprintf("%s/%s", dstAddr, dstAddr.Network()),
-	})
+	logDst = conn.RemoteAddr().String() + " => " + dstAddr.String() + "/" + dstAddr.Network()
 
 	var rw io.ReadWriter = conn
 	if h.md.sniffing {
@@ -111,97 +103,90 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 		if err == nil &&
 			hdr[0] == dissector.Handshake &&
 			binary.BigEndian.Uint16(hdr[1:3]) == tls.VersionTLS10 {
-			return h.handleHTTPS(ctx, rw, conn.RemoteAddr(), dstAddr, log)
+			return h.handleHTTPS(ctx, rw, conn.RemoteAddr(), dstAddr)
 		}
 
 		// try to sniff HTTP traffic
 		if isHTTP(string(hdr[:])) {
-			return h.handleHTTP(ctx, rw, conn.RemoteAddr(), log)
+			return h.handleHTTP(ctx, rw, conn.RemoteAddr())
 		}
 	}
 
-	fmt.Println("Handler red-tcp handle NON-HTTP/S")
-	log.Debugf("%s >> %s", conn.RemoteAddr(), dstAddr)
-
-	if h.options.Bypass != nil && h.options.Bypass.Contains(ctx, dstAddr.String()) {
-		log.Debug("bypass: ", dstAddr)
-		return nil
-	}
+	log.ConnDebug("handler", logSrc, logDst, "red-tcp handle NON HTTP/S")
+	log.ConnDebug("handler", logSrc, logDst, "connecting")
 
 	cc, err := h.router.Dial(ctx, dstAddr.Network(), dstAddr.String())
 	if err != nil {
-		log.Error(err)
+		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
 	defer cc.Close()
 
 	t := time.Now()
-	log.Infof("%s <-> %s", conn.RemoteAddr(), dstAddr)
+	log.ConnInfo("handler", logSrc, logDst, "connection established")
 	netpkg.Transport(rw, cc)
-	log.WithFields(map[string]any{
-		"duration": time.Since(t),
-	}).Infof("%s >-< %s", conn.RemoteAddr(), dstAddr)
+	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
 
 	return nil
 }
 
-func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, raddr net.Addr, log logger.Logger) error {
-	fmt.Println("Handler red-tcp handle HTTP")
+func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, raddr net.Addr) error {
 	req, err := http.ReadRequest(bufio.NewReader(rw))
 	if err != nil {
 		return err
-	}
-
-	if log.IsLevelEnabled(logger.DebugLevel) {
-		dump, _ := httputil.DumpRequest(req, false)
-		log.Debug(string(dump))
 	}
 
 	host := req.Host
 	if _, _, err := net.SplitHostPort(host); err != nil {
 		host = net.JoinHostPort(host, "80")
 	}
-	log = log.WithFields(map[string]any{
-		"host": host,
-	})
 
-	if h.options.Bypass != nil && h.options.Bypass.Contains(ctx, host) {
-		log.Debug("bypass: ", host)
-		return nil
+	logSrc := strings.Split(raddr.String(), ":")[0]
+	logDst := host + "/" + raddr.Network()
+	log.ConnDebug("handler", logSrc, logDst, "red-tcp handle HTTP")
+
+	req.URL = &url.URL{
+		Path: fmt.Sprintf("http://%s%s", host, req.URL.Path),
 	}
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
+
+	if meta.DEBUG {
+		dump, _ := httputil.DumpRequest(req, false)
+		log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("Request: %s", string(dump)))
+	}
+	log.ConnDebug("handler", logSrc, logDst, "connecting")
 
 	cc, err := h.router.Dial(ctx, "tcp", host)
 	if err != nil {
-		log.Error(err)
+		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
 	defer cc.Close()
 
 	t := time.Now()
-	log.Infof("%s <-> %s", raddr, host)
 	defer func() {
-		log.WithFields(map[string]any{
-			"duration": time.Since(t),
-		}).Infof("%s >-< %s", raddr, host)
+		log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
 	}()
 
 	if err := req.Write(cc); err != nil {
-		log.Error(err)
+		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
+	log.ConnInfo("handler", logSrc, logDst, "connection established")
 
 	var rw2 io.ReadWriter = cc
-	if log.IsLevelEnabled(logger.DebugLevel) {
+	if meta.DEBUG {
 		var buf bytes.Buffer
 		resp, err := http.ReadResponse(bufio.NewReader(io.TeeReader(cc, &buf)), req)
 		if err != nil {
-			log.Error(err)
+			log.ConnError("handler", logSrc, logDst, err)
 			return err
 		}
 		defer resp.Body.Close()
 
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Debug(string(dump))
+		log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("Response: %s", string(dump)))
 
 		rw2 = xio.NewReadWriter(io.MultiReader(&buf, cc), cc)
 	}
@@ -211,12 +196,15 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 	return nil
 }
 
-func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, raddr, dstAddr net.Addr, log logger.Logger) error {
-	fmt.Println("Handler red-tcp handle HTTPS")
+func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, raddr, dstAddr net.Addr) error {
 	buf := new(bytes.Buffer)
 	host, err := h.getServerName(ctx, io.TeeReader(rw, buf))
+	logSrc := strings.Split(raddr.String(), ":")[0]
+	logDst := host + "/" + raddr.Network()
+	log.ConnDebug("handler", logSrc, logDst, "red-tcp handle HTTPS")
+
 	if err != nil {
-		log.Error(err)
+		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
 	if host == "" {
@@ -231,28 +219,17 @@ func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, rad
 		}
 	}
 
-	log = log.WithFields(map[string]any{
-		"host": host,
-	})
-
-	if h.options.Bypass != nil && h.options.Bypass.Contains(ctx, host) {
-		log.Debug("bypass: ", host)
-		return nil
-	}
-
 	cc, err := h.router.Dial(ctx, "tcp", host)
 	if err != nil {
-		log.Error(err)
+		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
 	defer cc.Close()
 
 	t := time.Now()
-	log.Infof("%s <-> %s", raddr, host)
+	log.ConnInfo("handler", logSrc, logDst, "connection established")
 	netpkg.Transport(xio.NewReadWriter(io.MultiReader(buf, rw), rw), cc)
-	log.WithFields(map[string]any{
-		"duration": time.Since(t),
-	}).Infof("%s >-< %s", raddr, host)
+	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
 
 	return nil
 }

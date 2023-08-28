@@ -9,12 +9,14 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 
 	"proxy_forwarder/gost/core/connector"
-	"proxy_forwarder/gost/core/logger"
 	md "proxy_forwarder/gost/core/metadata"
 	"proxy_forwarder/gost/x/registry"
+	"proxy_forwarder/log"
+	"proxy_forwarder/meta"
 )
 
 func init() {
@@ -41,15 +43,28 @@ func (c *httpConnector) Init(md md.Metadata) (err error) {
 	return c.parseMetadata(md)
 }
 
-func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, address string, opts ...connector.ConnectOption) (net.Conn, error) {
-	log := c.options.Logger.WithFields(map[string]any{
-		"local":   conn.LocalAddr().String(),
-		"remote":  conn.RemoteAddr().String(),
-		"network": network,
-		"address": address,
-	})
-	log.Debugf("connect http %s/%s", address, network)
+func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, l4proto string, address string, opts ...connector.ConnectOption) (net.Conn, error) {
+	logSrc := strings.Split(conn.LocalAddr().String(), ":")[0]
+	logDst := conn.RemoteAddr().String() + " => " + address + "/" + l4proto
 
+	if strings.HasSuffix(address, ":80") {
+		// don't use HTTP-CONNECT tunnel if plain http is used
+		// todo: use https-check like used in handler-redirect-tcp
+		log.ConnDebug("connector", logSrc, logDst, "sending plain HTTP without HTTP-CONNECT tunnel")
+
+		var cOpts connector.ConnectOptions
+		for _, opt := range opts {
+			opt(&cOpts)
+		}
+
+		conn, err := cOpts.NetDialer.Dial(ctx, l4proto, conn.RemoteAddr().String())
+		if err != nil {
+			return nil, err
+		}
+		return conn, nil
+	}
+
+	log.ConnDebug("connector", logSrc, logDst, "establishing HTTP-CONNECT tunnel")
 	req := &http.Request{
 		Method:     http.MethodConnect,
 		URL:        &url.URL{Host: address},
@@ -71,22 +86,22 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 			"Basic "+base64.StdEncoding.EncodeToString([]byte(u+":"+p)))
 	}
 
-	switch network {
+	switch l4proto {
 	case "tcp", "tcp4", "tcp6":
 		if _, ok := conn.(net.PacketConn); ok {
 			err := fmt.Errorf("tcp over udp is unsupported")
-			log.Error(err)
+			log.ConnError("connector", logSrc, logDst, err)
 			return nil, err
 		}
 	default:
-		err := fmt.Errorf("network %s is unsupported", network)
-		log.Error(err)
+		err := fmt.Errorf("network %s is unsupported", l4proto)
+		log.ConnError("connector", logSrc, logDst, err)
 		return nil, err
 	}
 
-	if log.IsLevelEnabled(logger.DebugLevel) {
+	if meta.DEBUG {
 		dump, _ := httputil.DumpRequest(req, false)
-		log.Debug(string(dump))
+		log.ConnDebug("connector", logSrc, logDst, fmt.Sprintf("Request: %s", string(dump)))
 	}
 
 	if c.md.connectTimeout > 0 {
@@ -99,11 +114,6 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 		return nil, err
 	}
 
-	if log.IsLevelEnabled(logger.DebugLevel) {
-		dump, _ := httputil.DumpRequest(req, false)
-		log.Debug(string(dump))
-	}
-
 	resp, err := http.ReadResponse(bufio.NewReader(conn), req)
 	if err != nil {
 		return nil, err
@@ -113,9 +123,9 @@ func (c *httpConnector) Connect(ctx context.Context, conn net.Conn, network, add
 	// in this case, close body will be blocked, so we leave it untouched.
 	// defer resp.Body.Close()
 
-	if log.IsLevelEnabled(logger.DebugLevel) {
+	if meta.DEBUG {
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Debug(string(dump))
+		log.ConnDebug("connector", logSrc, logDst, fmt.Sprintf("Response: %s", string(dump)))
 	}
 
 	// if proxy 'tunnel' could not be established

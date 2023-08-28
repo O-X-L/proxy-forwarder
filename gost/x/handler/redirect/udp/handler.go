@@ -11,6 +11,7 @@ import (
 	md "proxy_forwarder/gost/core/metadata"
 	netpkg "proxy_forwarder/gost/x/internal/net"
 	"proxy_forwarder/gost/x/registry"
+	"proxy_forwarder/log"
 )
 
 func init() {
@@ -49,62 +50,31 @@ func (h *redirectHandler) Init(md md.Metadata) (err error) {
 
 func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...handler.HandleOption) error {
 	defer conn.Close()
+	logSrc := conn.LocalAddr().String() + "/" + conn.LocalAddr().Network()
+	logDst := conn.RemoteAddr().String()
+	log.ConnInfo("handler", logSrc, logDst, "red-udp")
 
 	start := time.Now()
-	log := h.options.Logger.WithFields(map[string]any{
-		"remote": conn.RemoteAddr().String(),
-		"local":  conn.LocalAddr().String(),
-	})
 
-	log.Infof("%s <> %s", conn.RemoteAddr(), conn.LocalAddr())
 	defer func() {
-		log.WithFields(map[string]any{
-			"duration": time.Since(start),
-		}).Infof("%s >< %s", conn.RemoteAddr(), conn.LocalAddr())
+		log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection finished after %s", time.Since(start)))
 	}()
-
-	if !h.checkRateLimit(conn.RemoteAddr()) {
-		return nil
-	}
 
 	dstAddr := conn.LocalAddr()
 
-	log = log.WithFields(map[string]any{
-		"dst": fmt.Sprintf("%s/%s", dstAddr, dstAddr.Network()),
-	})
-
-	log.Debugf("%s >> %s", conn.RemoteAddr(), dstAddr)
-
-	if h.options.Bypass != nil && h.options.Bypass.Contains(ctx, dstAddr.String()) {
-		log.Debug("bypass: ", dstAddr)
-		return nil
-	}
+	log.ConnDebug("handler", logSrc, logDst, "connecting")
 
 	cc, err := h.router.Dial(ctx, dstAddr.Network(), dstAddr.String())
 	if err != nil {
-		log.Error(err)
+		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
 	defer cc.Close()
 
 	t := time.Now()
-	log.Infof("%s <-> %s", conn.RemoteAddr(), dstAddr)
+	log.ConnInfo("handler", logSrc, logDst, "connection established")
 	netpkg.Transport(conn, cc)
-	log.WithFields(map[string]any{
-		"duration": time.Since(t),
-	}).Infof("%s >-< %s", conn.RemoteAddr(), dstAddr)
+	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
 
 	return nil
-}
-
-func (h *redirectHandler) checkRateLimit(addr net.Addr) bool {
-	if h.options.RateLimiter == nil {
-		return true
-	}
-	host, _, _ := net.SplitHostPort(addr.String())
-	if limiter := h.options.RateLimiter.Limiter(host); limiter != nil {
-		return limiter.Allow(1)
-	}
-
-	return true
 }
