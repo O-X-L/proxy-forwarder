@@ -69,6 +69,25 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
 
 ----
 
+## Examples
+
+```bash
+> curl https://superstes.eu
+# proxy-forwarder
+2023-08-29 00:19:16 | INFO | handler | 192.168.11.104 <=> superstes.eu/tcp | connection established
+# squid
+NONE_NONE/200 0 CONNECT superstes.eu:443 - HIER_NONE/- -
+TCP_TUNNEL/200 6178 CONNECT superstes.eu:443 - HIER_DIRECT/superstes.eu -
+
+> curl http://superstes.eu
+# proxy-forwarder
+2023-08-29 00:20:38 | INFO | handler | 192.168.11.104 <=> superstes.eu:80/tcp | connection established
+# squid
+TCP_REFRESH_MODIFIED/301 477 GET http://superstes.eu/ - HIER_DIRECT/superstes.eu text/html
+```
+
+----
+
 ## Squid
 
 This forwarder will connect:
