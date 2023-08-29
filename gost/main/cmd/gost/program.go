@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"os"
 
 	"proxy_forwarder/gost/core/logger"
@@ -36,32 +35,12 @@ func (p *program) Init(env svc.Environment) error {
 		}
 	}
 
-	if v := os.Getenv("GOST_API"); v != "" {
-		cfg.API = &config.APIConfig{
-			Addr: v,
-		}
-	}
-	if v := os.Getenv("GOST_LOGGER_LEVEL"); v != "" {
-		cfg.Log = &config.LogConfig{
-			Level: v,
-		}
-	}
-	if v := os.Getenv("GOST_PROFILING"); v != "" {
-		cfg.Profiling = &config.ProfilingConfig{
-			Addr: v,
-		}
-	}
 	if v := os.Getenv("GOST_METRICS"); v != "" {
 		cfg.Metrics = &config.MetricsConfig{
 			Addr: v,
 		}
 	}
 
-	if apiAddr != "" {
-		cfg.API = &config.APIConfig{
-			Addr: apiAddr,
-		}
-	}
 	if debug {
 		if cfg.Log == nil {
 			cfg.Log = &config.LogConfig{}
@@ -93,28 +72,6 @@ func (p *program) Init(env svc.Environment) error {
 func (p *program) Start() error {
 	log := logger.Default()
 	cfg := config.Global()
-
-	if cfg.API != nil {
-		s, err := buildAPIService(cfg.API)
-		if err != nil {
-			return err
-		}
-		go func() {
-			defer s.Close()
-			log.Info("api service on ", s.Addr())
-			log.Fatal(s.Serve())
-		}()
-	}
-	if cfg.Profiling != nil {
-		go func() {
-			addr := cfg.Profiling.Addr
-			if addr == "" {
-				addr = ":6060"
-			}
-			log.Info("profiling server on ", addr)
-			log.Fatal(http.ListenAndServe(addr, nil))
-		}()
-	}
 
 	if cfg.Metrics != nil {
 		xmetrics.Init(xmetrics.NewMetrics())
@@ -183,14 +140,8 @@ func (p *program) mergeConfig(cfg1, cfg2 *config.Config) *config.Config {
 	if cfg2.Log != nil {
 		cfg.Log = cfg2.Log
 	}
-	if cfg2.API != nil {
-		cfg.API = cfg2.API
-	}
 	if cfg2.Metrics != nil {
 		cfg.Metrics = cfg2.Metrics
-	}
-	if cfg2.Profiling != nil {
-		cfg.Profiling = cfg2.Profiling
 	}
 
 	return cfg

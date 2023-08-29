@@ -7,7 +7,6 @@ import (
 
 	"proxy_forwarder/gost/core/logger"
 	"proxy_forwarder/gost/core/service"
-	"proxy_forwarder/gost/x/api"
 	"proxy_forwarder/gost/x/config"
 	"proxy_forwarder/gost/x/config/parsing"
 	xlogger "proxy_forwarder/gost/x/logger"
@@ -163,19 +162,6 @@ func logFromConfig(cfg *config.LogConfig) logger.Logger {
 	opts = append(opts, xlogger.OutputLoggerOption(out))
 
 	return xlogger.NewLogger(opts...)
-}
-
-func buildAPIService(cfg *config.APIConfig) (service.Service, error) {
-	auther := parsing.ParseAutherFromAuth(cfg.Auth)
-	if cfg.Auther != "" {
-		auther = registry.AutherRegistry().Get(cfg.Auther)
-	}
-	return api.NewService(
-		cfg.Addr,
-		api.PathPrefixOption(cfg.PathPrefix),
-		api.AccessLogOption(cfg.AccessLog),
-		api.AutherOption(auther),
-	)
 }
 
 func buildMetricsService(cfg *config.MetricsConfig) (service.Service, error) {
