@@ -201,6 +201,8 @@ Type=simple
 ExecStart=/usr/local/bin/proxy_forwarder -P 4128 -F http://192.168.1.20:3128
 User=proxy_forwarder
 Group=proxy_forwarder
+Restart=on-failure
+RestartSec=5s
 
 StandardOutput=journal
 StandardError=journal
