@@ -54,7 +54,7 @@ func (h *redirectHandler) Init(md md.Metadata) (err error) {
 
 	h.router = h.options.Router
 	if h.router == nil {
-		h.router = chain.NewRouter(chain.LoggerRouterOption(h.options.Logger))
+		h.router = chain.NewRouter()
 	}
 
 	return
@@ -62,7 +62,7 @@ func (h *redirectHandler) Init(md md.Metadata) (err error) {
 
 func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...handler.HandleOption) (err error) {
 	defer conn.Close()
-	logSrc := strings.Split(conn.LocalAddr().String(), ":")[0]
+	logSrc := conn.LocalAddr().String()
 	logDst := conn.RemoteAddr().String()
 
 	start := time.Now()
@@ -70,10 +70,6 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 	defer func() {
 		log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection finished after %s", time.Since(start)))
 	}()
-
-	if !h.checkRateLimit(conn.RemoteAddr()) {
-		return nil
-	}
 
 	var dstAddr net.Addr
 
@@ -137,11 +133,9 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 	}
 
 	host := req.Host
-	if _, _, err := net.SplitHostPort(host); err != nil {
-		host = net.JoinHostPort(host, "80")
-	}
+	host = buildHostPort(host, "80")
 
-	logSrc := strings.Split(raddr.String(), ":")[0]
+	logSrc := raddr.String()
 	logDst := host + "/" + raddr.Network()
 	log.ConnDebug("handler", logSrc, logDst, "red-tcp handle HTTP")
 
@@ -199,7 +193,7 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, raddr, dstAddr net.Addr) error {
 	buf := new(bytes.Buffer)
 	host, err := h.getServerName(ctx, io.TeeReader(rw, buf))
-	logSrc := strings.Split(raddr.String(), ":")[0]
+	logSrc := raddr.String()
 	logDst := host + "/" + raddr.Network()
 	log.ConnDebug("handler", logSrc, logDst, "red-tcp handle HTTPS")
 
@@ -207,17 +201,8 @@ func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, rad
 		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
-	if host == "" {
-		host = dstAddr.String()
-	} else {
-		if _, _, err := net.SplitHostPort(host); err != nil {
-			_, port, _ := net.SplitHostPort(dstAddr.String())
-			if port == "" {
-				port = "443"
-			}
-			host = net.JoinHostPort(host, port)
-		}
-	}
+	host = buildHostPort(host, "443")
+	logDst = host + "/" + raddr.Network()
 
 	cc, err := h.router.Dial(ctx, "tcp", host)
 	if err != nil {
@@ -256,18 +241,6 @@ func (h *redirectHandler) getServerName(ctx context.Context, r io.Reader) (host 
 	return
 }
 
-func (h *redirectHandler) checkRateLimit(addr net.Addr) bool {
-	if h.options.RateLimiter == nil {
-		return true
-	}
-	host, _, _ := net.SplitHostPort(addr.String())
-	if limiter := h.options.RateLimiter.Limiter(host); limiter != nil {
-		return limiter.Allow(1)
-	}
-
-	return true
-}
-
 func isHTTP(s string) bool {
 	return strings.HasPrefix(http.MethodGet, s[:3]) ||
 		strings.HasPrefix(http.MethodPost, s[:4]) ||
@@ -278,4 +251,29 @@ func isHTTP(s string) bool {
 		strings.HasPrefix(http.MethodHead, s[:4]) ||
 		strings.HasPrefix(http.MethodConnect, s) ||
 		strings.HasPrefix(http.MethodTrace, s)
+}
+
+func buildHostPort(host string, defaultPort string) string {
+	port := defaultPort
+	host_port := strings.Split(host, ":")
+	if len(host_port) > 2 {
+		// ipv6
+		if strings.Contains(host, "]") {
+			mb_port := strings.Split(host, "]")
+			mb_port2 := strings.Split(mb_port[1], ":")
+
+			if len(mb_port) == 2 {
+				port = mb_port2[1]
+			}
+		}
+	} else {
+		if _, _, err := net.SplitHostPort(host); err != nil {
+			_, port, _ := net.SplitHostPort(host)
+			if port == "" {
+				port = defaultPort
+			}
+		}
+	}
+	host = net.JoinHostPort(host, port)
+	return host
 }
