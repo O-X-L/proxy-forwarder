@@ -137,7 +137,7 @@ func (r *route) connect(ctx context.Context, logger logger.Logger) (conn net.Con
 		}
 	}()
 
-	addr, err := chain.Resolve(ctx, network, node.Addr, node.Options().Resolver, node.Options().HostMapper, logger)
+	addr, err := chain.Resolve(ctx, network, node.Addr, node.Options().Resolver, node.Options().HostMapper)
 	marker := node.Marker()
 	if err != nil {
 		if marker != nil {
@@ -181,7 +181,7 @@ func (r *route) connect(ctx context.Context, logger logger.Logger) (conn net.Con
 	preNode := node
 	for _, node := range r.nodes[1:] {
 		marker := node.Marker()
-		addr, err = chain.Resolve(ctx, network, node.Addr, node.Options().Resolver, node.Options().HostMapper, logger)
+		addr, err = chain.Resolve(ctx, network, node.Addr, node.Options().Resolver, node.Options().HostMapper)
 		if err != nil {
 			cn.Close()
 			if marker != nil {

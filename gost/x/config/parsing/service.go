@@ -10,7 +10,6 @@ import (
 	"proxy_forwarder/gost/core/chain"
 	"proxy_forwarder/gost/core/handler"
 	"proxy_forwarder/gost/core/listener"
-	"proxy_forwarder/gost/core/logger"
 	mdutil "proxy_forwarder/gost/core/metadata/util"
 	"proxy_forwarder/gost/core/recorder"
 	"proxy_forwarder/gost/core/selector"
@@ -21,6 +20,7 @@ import (
 	"proxy_forwarder/gost/x/metadata"
 	"proxy_forwarder/gost/x/registry"
 	xservice "proxy_forwarder/gost/x/service"
+	"proxy_forwarder/log"
 )
 
 func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
@@ -34,16 +34,6 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 			Type: "auto",
 		}
 	}
-	serviceLogger := logger.Default().WithFields(map[string]any{
-		"kind":     "service",
-		"service":  cfg.Name,
-		"listener": cfg.Listener.Type,
-		"handler":  cfg.Handler.Type,
-	})
-
-	listenerLogger := serviceLogger.WithFields(map[string]any{
-		"kind": "listener",
-	})
 
 	tlsCfg := cfg.Listener.TLS
 	if tlsCfg == nil {
@@ -52,7 +42,7 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 	tlsConfig, err := tls_util.LoadServerConfig(
 		tlsCfg.CertFile, tlsCfg.KeyFile, tlsCfg.CAFile)
 	if err != nil {
-		listenerLogger.Error(err)
+		log.Error("service", err)
 		return nil, err
 	}
 	if tlsConfig == nil {
@@ -109,7 +99,6 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 		listener.AdmissionOption(admission.AdmissionGroup(admissions...)),
 		listener.TrafficLimiterOption(registry.TrafficLimiterRegistry().Get(cfg.Limiter)),
 		listener.ConnLimiterOption(registry.ConnLimiterRegistry().Get(cfg.CLimiter)),
-		listener.LoggerOption(listenerLogger),
 		listener.ServiceOption(cfg.Name),
 		listener.ProxyProtocolOption(ppv),
 	}
@@ -129,15 +118,11 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 	if cfg.Listener.Metadata == nil {
 		cfg.Listener.Metadata = make(map[string]any)
 	}
-	listenerLogger.Debugf("metadata: %v", cfg.Listener.Metadata)
+	log.Debug("service", fmt.Sprintf("metadata: %v", cfg.Listener.Metadata))
 	if err := ln.Init(metadata.NewMetadata(cfg.Listener.Metadata)); err != nil {
-		listenerLogger.Error("init: ", err)
+		log.Error("service", err)
 		return nil, err
 	}
-
-	handlerLogger := serviceLogger.WithFields(map[string]any{
-		"kind": "handler",
-	})
 
 	tlsCfg = cfg.Handler.TLS
 	if tlsCfg == nil {
@@ -146,7 +131,7 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 	tlsConfig, err = tls_util.LoadServerConfig(
 		tlsCfg.CertFile, tlsCfg.KeyFile, tlsCfg.CAFile)
 	if err != nil {
-		handlerLogger.Error(err)
+		log.Error("service", err)
 		return nil, err
 	}
 	if tlsConfig == nil {
@@ -181,7 +166,6 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 		chain.ResolverRouterOption(registry.ResolverRegistry().Get(cfg.Resolver)),
 		chain.HostMapperRouterOption(registry.HostsRegistry().Get(cfg.Hosts)),
 		chain.RecordersRouterOption(recorders...),
-		chain.LoggerRouterOption(handlerLogger),
 	}
 	if !ignoreChain {
 		routerOpts = append(routerOpts,
@@ -199,7 +183,6 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 			handler.BypassOption(bypass.BypassGroup(bypassList(cfg.Bypass, cfg.Bypasses...)...)),
 			handler.TLSConfigOption(tlsConfig),
 			handler.RateLimiterOption(registry.RateLimiterRegistry().Get(cfg.RLimiter)),
-			handler.LoggerOption(handlerLogger),
 			handler.ServiceOption(cfg.Name),
 		)
 	} else {
@@ -217,9 +200,9 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 	if cfg.Handler.Metadata == nil {
 		cfg.Handler.Metadata = make(map[string]any)
 	}
-	handlerLogger.Debugf("metadata: %v", cfg.Handler.Metadata)
+	log.Debug("service", fmt.Sprintf("metadata: %v", cfg.Handler.Metadata))
 	if err := h.Init(metadata.NewMetadata(cfg.Handler.Metadata)); err != nil {
-		handlerLogger.Error("init: ", err)
+		log.Error("service", err)
 		return nil, err
 	}
 
@@ -230,10 +213,8 @@ func ParseService(cfg *config.ServiceConfig) (service.Service, error) {
 		xservice.PostUpOption(postUp),
 		xservice.PostDownOption(postDown),
 		xservice.RecordersOption(recorders...),
-		xservice.LoggerOption(serviceLogger),
 	)
-
-	serviceLogger.Infof("listening on %s/%s", s.Addr().String(), s.Addr().Network())
+	log.Info("service", fmt.Sprintf("listening on %s/%s", s.Addr().String(), s.Addr().Network()))
 	return s, nil
 }
 

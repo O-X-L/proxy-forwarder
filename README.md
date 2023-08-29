@@ -2,7 +2,8 @@
 
 This tool is specifically designed to solve a problem when using proxy servers:
 
-* There is no clean way of forwarding traffic to a remote proxy server that is outside your layer 2 network
+* Setting the environment-variables 'HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy' and 'https_proxy' for all applications and HTTP-clients may be problematic/too inconsistent
+* There is no clean way of forwarding all system traffic to a remote proxy server that is outside your layer 2 network
 * Some proxy servers (_like Squid_) do not support redirecting the traffic using DNAT
 
 
@@ -27,9 +28,10 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
   -F 'Proxy server to forward the traffic to' (required, Example: 'http://192.168.0.1:3128')
   -T 'Run in TProxy mode' (default: false)
   -M 'Mark to set for TProxy traffic' (default: None)
-  -m 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')
   -V 'Show version'
   -D 'Enable debug mode'
+  -metrics 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')
+  -no-log-time 'Do not add timestamp to logs'  # use when systemd service
 ```
 
 ### It does
@@ -41,6 +43,12 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
   * or [TProxy Mode](https://docs.kernel.org/networking/tproxy.html) (see also: [extended documentation](https://wiki.superstes.eu/en/latest/1/network/nftables.html#tproxy))
 
 * Forward the traffic to the server defined using the `-F` flag
+
+
+These are the main two files that cover the logic:
+
+* [redirect-tcp handler](https://github.com/superstes/proxy-forwarder/blob/latest/gost/x/handler/redirect/tcp/handler.go) (*HTTP/HTTPS split*)
+* [http connector](https://github.com/superstes/proxy-forwarder/blob/latest/gost/x/connector/http/connector.go) (*CONNECT Tunnel*)
 
 ----
 
@@ -74,14 +82,14 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
 ```bash
 > curl https://superstes.eu
 # proxy-forwarder
-2023-08-29 00:19:16 | INFO | handler | 192.168.11.104 <=> superstes.eu/tcp | connection established
+2023-08-29 20:49:10 | INFO | handler | 192.168.11.104:36386 <=> superstes.eu:443/tcp | connection established
 # squid
 NONE_NONE/200 0 CONNECT superstes.eu:443 - HIER_NONE/- -
 TCP_TUNNEL/200 6178 CONNECT superstes.eu:443 - HIER_DIRECT/superstes.eu -
 
 > curl http://superstes.eu
 # proxy-forwarder
-2023-08-29 00:20:38 | INFO | handler | 192.168.11.104 <=> superstes.eu:80/tcp | connection established
+2023-08-29 20:49:07 | INFO | handler | 192.168.11.104:50808 <=> superstes.eu:80/tcp | connection established
 # squid
 TCP_REFRESH_MODIFIED/301 477 GET http://superstes.eu/ - HIER_DIRECT/superstes.eu text/html
 ```
@@ -143,4 +151,61 @@ sudo iptables -t nat -I OUTPUT -m owner ! --uid-owner 1100 -p tcp --dport 443 -j
 
 # only output-traffic for one user to specific target (nice for testing purposes)
 sudo iptables -t nat -I OUTPUT -m owner --uid-owner 1000 -d 135.181.170.219 -p tcp -j DNAT --to-destination 127.0.0.1:3128
+```
+
+----
+
+## Permissions
+
+### Destination NAT
+
+If you use DNAT to redirect the traffic - the service user running the proxy-forwarder has no need for additional privileges!
+
+A default linux user with `/usr/sbin/nologin` as shell is enough.
+
+### TPROXY
+
+If you want to use TPROXY to redirect the traffic - the service user needs the privilege to set `` on its sockets.
+
+The [CAP_NET_RAW](https://man7.org/linux/man-pages/man7/capabilities.7.html) may be needed for this:
+
+> bind to any address for transparent proxying
+
+You can add it like this:
+
+```bash
+setcap cap_net_raw=+ep /usr/local/bin/proxy-forwarder
+
+# make sure only wanted users can execute the binary!
+useradd proxy_forwarder --shell /usr/sbin/nologin
+chown root:proxy_forwarder /usr/local/bin/proxy-forwarder
+chmod 750 /usr/local/bin/proxy-forwarder
+```
+
+----
+
+## Service
+
+Here's an example systemd service to run the forwarder:
+
+```text
+# /etc/systemd/system/proxy-forwarder.service
+
+[Unit]
+Description=Proxy forwarder
+Documentation=https://github.com/superstes/proxy-forwarder
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/proxy_forwarder -P 4128 -F http://192.168.1.20:3128
+User=proxy_forwarder
+Group=proxy_forwarder
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=proxy_forwarder
+
+[Install]
+WantedBy=multi-user.target
 ```

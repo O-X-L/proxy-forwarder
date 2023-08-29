@@ -19,6 +19,7 @@ import (
 	tls_util "proxy_forwarder/gost/x/internal/util/tls"
 	mdx "proxy_forwarder/gost/x/metadata"
 	"proxy_forwarder/gost/x/registry"
+	"proxy_forwarder/log"
 )
 
 func ParseChain(cfg *config.ChainConfig) (chain.Chainer, error) {
@@ -88,13 +89,6 @@ func ParseHop(cfg *config.HopConfig) (chain.Hop, error) {
 			}
 		}
 
-		nodeLogger := hopLogger.WithFields(map[string]any{
-			"kind":      "node",
-			"node":      v.Name,
-			"connector": v.Connector.Type,
-			"dialer":    v.Dialer.Type,
-		})
-
 		serverName, _, _ := net.SplitHostPort(v.Addr)
 
 		tlsCfg := v.Connector.TLS
@@ -108,7 +102,7 @@ func ParseHop(cfg *config.HopConfig) (chain.Hop, error) {
 			tlsCfg.CertFile, tlsCfg.KeyFile, tlsCfg.CAFile,
 			tlsCfg.Secure, tlsCfg.ServerName)
 		if err != nil {
-			hopLogger.Error(err)
+			log.Error("chain", err)
 			return nil, err
 		}
 
@@ -117,16 +111,11 @@ func ParseHop(cfg *config.HopConfig) (chain.Hop, error) {
 			nm = mdx.NewMetadata(v.Metadata)
 		}
 
-		connectorLogger := nodeLogger.WithFields(map[string]any{
-			"kind": "connector",
-		})
 		var cr connector.Connector
 		if rf := registry.ConnectorRegistry().Get(v.Connector.Type); rf != nil {
 			cr = rf(
 				connector.AuthOption(parseAuth(v.Connector.Auth)),
-				connector.TLSConfigOption(tlsConfig),
-				connector.LoggerOption(connectorLogger),
-			)
+				connector.TLSConfigOption(tlsConfig))
 		} else {
 			return nil, fmt.Errorf("unregistered connector: %s", v.Connector.Type)
 		}
@@ -135,7 +124,7 @@ func ParseHop(cfg *config.HopConfig) (chain.Hop, error) {
 			v.Connector.Metadata = make(map[string]any)
 		}
 		if err := cr.Init(mdx.NewMetadata(v.Connector.Metadata)); err != nil {
-			connectorLogger.Error("init: ", err)
+			log.Error("chain", err)
 			return nil, err
 		}
 
@@ -159,16 +148,11 @@ func ParseHop(cfg *config.HopConfig) (chain.Hop, error) {
 			ppv = mdutil.GetInt(nm, mdKeyProxyProtocol)
 		}
 
-		dialerLogger := nodeLogger.WithFields(map[string]any{
-			"kind": "dialer",
-		})
-
 		var d dialer.Dialer
 		if rf := registry.DialerRegistry().Get(v.Dialer.Type); rf != nil {
 			d = rf(
 				dialer.AuthOption(parseAuth(v.Dialer.Auth)),
 				dialer.TLSConfigOption(tlsConfig),
-				dialer.LoggerOption(dialerLogger),
 				dialer.ProxyProtocolOption(ppv),
 			)
 		} else {
@@ -179,7 +163,7 @@ func ParseHop(cfg *config.HopConfig) (chain.Hop, error) {
 			v.Dialer.Metadata = make(map[string]any)
 		}
 		if err := d.Init(mdx.NewMetadata(v.Dialer.Metadata)); err != nil {
-			dialerLogger.Error("init: ", err)
+			log.Error("chain", err)
 			return nil, err
 		}
 

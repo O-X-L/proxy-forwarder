@@ -7,3 +7,4 @@ const (
 )
 
 var DEBUG bool = false
+var LOG_TIME bool = true

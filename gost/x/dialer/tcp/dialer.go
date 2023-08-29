@@ -8,6 +8,7 @@ import (
 	"proxy_forwarder/gost/core/logger"
 	md "proxy_forwarder/gost/core/metadata"
 	"proxy_forwarder/gost/x/registry"
+	"proxy_forwarder/log"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func (d *tcpDialer) Dial(ctx context.Context, addr string, opts ...dialer.DialOp
 
 	conn, err := options.NetDialer.Dial(ctx, "tcp", addr)
 	if err != nil {
-		d.logger.Error(err)
+		log.Error("dialer", err)
 	}
 	return conn, err
 }

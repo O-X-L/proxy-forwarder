@@ -8,7 +8,6 @@ and the data processing layer corresponds to the connector, the handler and the 
 
 import (
 	// Register connectors
-	_ "proxy_forwarder/gost/x/connector/direct"
 	_ "proxy_forwarder/gost/x/connector/http"
 
 	// Register dialers

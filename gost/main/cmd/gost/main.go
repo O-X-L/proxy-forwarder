@@ -72,15 +72,17 @@ func init() {
 	var tproxyMode bool
 	var tproxyMark string
 	var forwardProxy string
+	var noLogTime bool
 	listenerParams := "?sniffing=true"
 
 	flag.StringVar(&listenPort, "P", "", "Listen port")
 	flag.StringVar(&forwardProxy, "F", "", "Proxy server to forward the traffic to")
 	flag.BoolVar(&tproxyMode, "T", false, "Run in TProxy mode")
 	flag.StringVar(&tproxyMark, "M", "", "Mark to set for TPRoxy traffic")
-	flag.StringVar(&metricsAddr, "m", "", "Set a metrics service address (prometheus)")
 	flag.BoolVar(&printVersion, "V", false, "Show version")
 	flag.BoolVar(&meta.DEBUG, "D", false, "Enable debug mode")
+	flag.StringVar(&metricsAddr, "metrics", "", "Set a metrics service address (prometheus)")
+	flag.BoolVar(&noLogTime, "no-log-time", false, "Do not add timestamp to logs")
 	flag.Parse()
 
 	if printVersion {
@@ -95,9 +97,11 @@ func init() {
 		fmt.Println("  -F 'Proxy server to forward the traffic to' (required, Example: 'http://192.168.0.1:3128')")
 		fmt.Println("  -T 'Run in TProxy mode' (default: false)")
 		fmt.Println("  -M 'Mark to set for TProxy traffic' (default: None)")
-		fmt.Println("  -m 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')")
 		fmt.Println("  -V 'Show version'")
-		fmt.Printf("  -D 'Enable debug mode'\n\n")
+		fmt.Println("  -D 'Enable debug mode'")
+		fmt.Println("  -metrics 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')")
+		fmt.Println("  -no-log-time 'Do not add timestamp to logs'")
+		fmt.Printf("\n\n")
 		os.Exit(1)
 	}
 
@@ -105,6 +109,8 @@ func init() {
 		fmt.Println("The forward-proxy must include its protocol! (http/https)")
 		os.Exit(1)
 	}
+
+	meta.LOG_TIME = !noLogTime
 
 	nodes = []string{forwardProxy}
 

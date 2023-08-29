@@ -9,7 +9,7 @@ import (
 	"time"
 
 	xnet "proxy_forwarder/gost/core/common/net"
-	"proxy_forwarder/gost/core/logger"
+	"proxy_forwarder/log"
 )
 
 const (
@@ -25,7 +25,6 @@ type NetDialer struct {
 	Mark      int
 	Timeout   time.Duration
 	DialFunc  func(ctx context.Context, network, addr string) (net.Conn, error)
-	Logger    logger.Logger
 }
 
 func (d *NetDialer) Dial(ctx context.Context, network, addr string) (conn net.Conn, err error) {
@@ -42,11 +41,6 @@ func (d *NetDialer) Dial(ctx context.Context, network, addr string) (conn net.Co
 		return d.DialFunc(ctx, network, addr)
 	}
 
-	log := d.Logger
-	if log == nil {
-		log = logger.Default()
-	}
-
 	deadline := time.Now().Add(timeout)
 	ifces := strings.Split(d.Interface, ",")
 	for _, ifce := range ifces {
@@ -60,12 +54,12 @@ func (d *NetDialer) Dial(ctx context.Context, network, addr string) (conn net.Co
 		}
 
 		for _, ifAddr := range ifAddrs {
-			conn, err = d.dialOnce(ctx, network, addr, ifceName, ifAddr, deadline, log)
+			conn, err = d.dialOnce(ctx, network, addr, ifceName, ifAddr, deadline)
 			if err == nil {
 				return
 			}
 
-			log.Debugf("dial %s %v@%s failed: %s", network, ifAddr, ifceName, err)
+			log.Debug("dialer", fmt.Sprintf("dial %s %v@%s failed: %s", network, ifAddr, ifceName, err))
 
 			if strict &&
 				!strings.Contains(err.Error(), "no suitable address found") &&
@@ -82,9 +76,9 @@ func (d *NetDialer) Dial(ctx context.Context, network, addr string) (conn net.Co
 	return
 }
 
-func (d *NetDialer) dialOnce(ctx context.Context, network, addr, ifceName string, ifAddr net.Addr, deadline time.Time, log logger.Logger) (net.Conn, error) {
+func (d *NetDialer) dialOnce(ctx context.Context, network, addr, ifceName string, ifAddr net.Addr, deadline time.Time) (net.Conn, error) {
 	if ifceName != "" {
-		log.Debugf("interface: %s %v/%s", ifceName, ifAddr, network)
+		log.Debug("dialer", fmt.Sprintf("interface: %s %v/%s", ifceName, ifAddr, network))
 	}
 
 	switch network {
@@ -101,23 +95,23 @@ func (d *NetDialer) dialOnce(ctx context.Context, network, addr, ifceName string
 			}
 			sc, err := c.SyscallConn()
 			if err != nil {
-				log.Error(err)
+				log.Error("dialer", err)
 				return nil, err
 			}
 			err = sc.Control(func(fd uintptr) {
 				if ifceName != "" {
 					if err := bindDevice(fd, ifceName); err != nil {
-						log.Warnf("bind device: %v", err)
+						log.Info("dialer", fmt.Sprintf("bind device: %v", err))
 					}
 				}
 				if d.Mark != 0 {
 					if err := setMark(fd, d.Mark); err != nil {
-						log.Warnf("set mark: %v", err)
+						log.Info("dialer", fmt.Sprintf("set mark: %v", err))
 					}
 				}
 			})
 			if err != nil {
-				log.Error(err)
+				log.Error("dialer", err)
 			}
 			return c, nil
 		}
@@ -132,12 +126,12 @@ func (d *NetDialer) dialOnce(ctx context.Context, network, addr, ifceName string
 			return c.Control(func(fd uintptr) {
 				if ifceName != "" {
 					if err := bindDevice(fd, ifceName); err != nil {
-						log.Warnf("bind device: %v", err)
+						log.Info("dialer", fmt.Sprintf("bind device: %v", err))
 					}
 				}
 				if d.Mark != 0 {
 					if err := setMark(fd, d.Mark); err != nil {
-						log.Warnf("set mark: %v", err)
+						log.Info("dialer", fmt.Sprintf("set mark: %v", err))
 					}
 				}
 			})

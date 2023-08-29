@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"os/exec"
@@ -11,12 +12,12 @@ import (
 	"proxy_forwarder/gost/core/admission"
 	"proxy_forwarder/gost/core/handler"
 	"proxy_forwarder/gost/core/listener"
-	"proxy_forwarder/gost/core/logger"
 	"proxy_forwarder/gost/core/metrics"
 	"proxy_forwarder/gost/core/recorder"
 	"proxy_forwarder/gost/core/service"
 	sx "proxy_forwarder/gost/x/internal/util/selector"
 	xmetrics "proxy_forwarder/gost/x/metrics"
+	"proxy_forwarder/log"
 
 	"github.com/rs/xid"
 )
@@ -28,7 +29,6 @@ type options struct {
 	postUp    []string
 	preDown   []string
 	postDown  []string
-	logger    logger.Logger
 }
 
 type Option func(opts *options)
@@ -66,12 +66,6 @@ func PostUpOption(cmds []string) Option {
 func PostDownOption(cmds []string) Option {
 	return func(opts *options) {
 		opts.postDown = cmds
-	}
-}
-
-func LoggerOption(logger logger.Logger) Option {
-	return func(opts *options) {
-		opts.logger = logger
 	}
 }
 
@@ -137,11 +131,11 @@ func (s *defaultService) Serve() error {
 				if max := 5 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				s.options.logger.Warnf("accept: %v, retrying in %v", e, tempDelay)
+				log.Warn("service", fmt.Sprintf("accept: %v, retrying in %v", e, tempDelay))
 				time.Sleep(tempDelay)
 				continue
 			}
-			s.options.logger.Errorf("accept: %v", e)
+			log.Info("service", fmt.Sprintf("accept: %v", e))
 			return e
 		}
 		tempDelay = 0
@@ -150,18 +144,10 @@ func (s *defaultService) Serve() error {
 		if h, _, _ := net.SplitHostPort(host); h != "" {
 			host = h
 		}
-		for _, rec := range s.options.recorders {
-			if rec.Record == recorder.RecorderServiceClientAddress {
-				if err := rec.Recorder.Record(context.Background(), []byte(host)); err != nil {
-					s.options.logger.Errorf("record %s: %v", rec.Record, err)
-				}
-				break
-			}
-		}
 		if s.options.admission != nil &&
 			!s.options.admission.Admit(context.Background(), conn.RemoteAddr().String()) {
 			conn.Close()
-			s.options.logger.Debugf("admission: %s is denied", conn.RemoteAddr())
+			log.Debug("service", fmt.Sprintf("admission: %s is denied", conn.RemoteAddr()))
 			continue
 		}
 
@@ -189,7 +175,7 @@ func (s *defaultService) Serve() error {
 			ctx = ContextWithSid(ctx, xid.New().String())
 
 			if err := s.handler.Handle(ctx, conn); err != nil {
-				s.options.logger.Error(err)
+				log.Error("service", err)
 				if v := xmetrics.GetCounter(xmetrics.MetricServiceHandlerErrorsCounter,
 					metrics.Labels{"service": s.name, "client": host}); v != nil {
 					v.Inc()
@@ -205,10 +191,10 @@ func (s *defaultService) execCmds(phase string, cmds []string) {
 		if cmd == "" {
 			continue
 		}
-		s.options.logger.Info(cmd)
+		log.Info("service", cmd)
 
 		if err := exec.Command("/bin/sh", "-c", cmd).Run(); err != nil {
-			s.options.logger.Warnf("[%s] %s: %v", phase, cmd, err)
+			log.Warn("service", fmt.Sprintf("executing [%s] %s: %v", phase, cmd, err))
 		}
 	}
 }

@@ -6,11 +6,11 @@ import (
 	"net"
 
 	"proxy_forwarder/gost/core/hosts"
-	"proxy_forwarder/gost/core/logger"
 	"proxy_forwarder/gost/core/resolver"
+	"proxy_forwarder/log"
 )
 
-func Resolve(ctx context.Context, network, addr string, r resolver.Resolver, hosts hosts.HostMapper, log logger.Logger) (string, error) {
+func Resolve(ctx context.Context, network, addr string, r resolver.Resolver, hosts hosts.HostMapper) (string, error) {
 	if addr == "" {
 		return addr, nil
 	}
@@ -25,7 +25,7 @@ func Resolve(ctx context.Context, network, addr string, r resolver.Resolver, hos
 
 	if hosts != nil {
 		if ips, _ := hosts.Lookup(ctx, network, host); len(ips) > 0 {
-			log.Debugf("hit host mapper: %s -> %s", host, ips)
+			log.Debug("resolve", fmt.Sprintf("hit host mapper: %s -> %s", host, ips))
 			return net.JoinHostPort(ips[0].String(), port), nil
 		}
 	}
@@ -36,7 +36,7 @@ func Resolve(ctx context.Context, network, addr string, r resolver.Resolver, hos
 			if err == resolver.ErrInvalid {
 				return addr, nil
 			}
-			log.Error(err)
+			log.Error("resolve", err)
 		}
 		if len(ips) == 0 {
 			return "", fmt.Errorf("resolver: domain %s does not exist", host)

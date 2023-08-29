@@ -38,7 +38,6 @@ func (*route) Dial(ctx context.Context, network, address string, opts ...DialOpt
 	netd := dialer.NetDialer{
 		Timeout:   options.Timeout,
 		Interface: options.Interface,
-		Logger:    options.Logger,
 	}
 	if options.SockOpts != nil {
 		netd.Mark = options.SockOpts.Mark

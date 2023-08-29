@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"proxy_forwarder/gost/core/hosts"
-	"proxy_forwarder/gost/core/logger"
 	"proxy_forwarder/gost/core/recorder"
 	"proxy_forwarder/gost/core/resolver"
+	"proxy_forwarder/log"
+	"proxy_forwarder/meta"
 )
 
 type SockOpts struct {
@@ -26,7 +27,6 @@ type RouterOptions struct {
 	Resolver   resolver.Resolver
 	HostMapper hosts.HostMapper
 	Recorders  []recorder.RecorderObject
-	Logger     logger.Logger
 }
 
 type RouterOption func(*RouterOptions)
@@ -79,12 +79,6 @@ func RecordersRouterOption(recorders ...recorder.RecorderObject) RouterOption {
 	}
 }
 
-func LoggerRouterOption(logger logger.Logger) RouterOption {
-	return func(o *RouterOptions) {
-		o.Logger = logger
-	}
-}
-
 type Router struct {
 	options RouterOptions
 }
@@ -95,9 +89,6 @@ func NewRouter(opts ...RouterOption) *Router {
 		if opt != nil {
 			opt(&r.options)
 		}
-	}
-	if r.options.Logger == nil {
-		r.options.Logger = logger.Default().WithFields(map[string]any{"kind": "router"})
 	}
 	return r
 }
@@ -128,7 +119,7 @@ func (r *Router) dial(ctx context.Context, network, address string) (conn net.Co
 	if count <= 0 {
 		count = 1
 	}
-	r.options.Logger.Debugf("dial %s/%s", address, network)
+	log.Debug("router", fmt.Sprintf("dial %s/%s", address, network))
 
 	for i := 0; i < count; i++ {
 		var route Route
@@ -136,18 +127,18 @@ func (r *Router) dial(ctx context.Context, network, address string) (conn net.Co
 			route = r.options.Chain.Route(ctx, network, address)
 		}
 
-		if r.options.Logger.IsLevelEnabled(logger.DebugLevel) {
+		if meta.DEBUG {
 			buf := bytes.Buffer{}
 			for _, node := range routePath(route) {
 				fmt.Fprintf(&buf, "%s@%s > ", node.Name, node.Addr)
 			}
 			fmt.Fprintf(&buf, "%s", address)
-			r.options.Logger.Debugf("route(retry=%d) %s", i, buf.String())
+			log.Debug("router", fmt.Sprintf("route(retry=%d) %s", i, buf.String()))
 		}
 
-		address, err = Resolve(ctx, "ip", address, r.options.Resolver, r.options.HostMapper, r.options.Logger)
+		address, err = Resolve(ctx, "ip", address, r.options.Resolver, r.options.HostMapper)
 		if err != nil {
-			r.options.Logger.Error(err)
+			log.Error("router", err)
 			break
 		}
 
@@ -157,13 +148,12 @@ func (r *Router) dial(ctx context.Context, network, address string) (conn net.Co
 		conn, err = route.Dial(ctx, network, address,
 			InterfaceDialOption(r.options.IfceName),
 			SockOptsDialOption(r.options.SockOpts),
-			LoggerDialOption(r.options.Logger),
 			TimeoutDialOption(r.options.Timeout),
 		)
 		if err == nil {
 			break
 		}
-		r.options.Logger.Errorf("route(retry=%d) %s", i, err)
+		log.ErrorS("router", fmt.Sprintf("route(retry=%d) %s", i, err))
 	}
 
 	return
@@ -174,7 +164,7 @@ func (r *Router) Bind(ctx context.Context, network, address string, opts ...Bind
 	if count <= 0 {
 		count = 1
 	}
-	r.options.Logger.Debugf("bind on %s/%s", address, network)
+	log.Debug("router", fmt.Sprintf("bind on %s/%s", address, network))
 
 	for i := 0; i < count; i++ {
 		var route Route
@@ -186,13 +176,13 @@ func (r *Router) Bind(ctx context.Context, network, address string, opts ...Bind
 			}
 		}
 
-		if r.options.Logger.IsLevelEnabled(logger.DebugLevel) {
+		if meta.DEBUG {
 			buf := bytes.Buffer{}
 			for _, node := range routePath(route) {
 				fmt.Fprintf(&buf, "%s@%s > ", node.Name, node.Addr)
 			}
 			fmt.Fprintf(&buf, "%s", address)
-			r.options.Logger.Debugf("route(retry=%d) %s", i, buf.String())
+			log.Debug("router", fmt.Sprintf("route(retry=%d) %s", i, buf.String()))
 		}
 
 		if route == nil {
@@ -202,7 +192,7 @@ func (r *Router) Bind(ctx context.Context, network, address string, opts ...Bind
 		if err == nil {
 			break
 		}
-		r.options.Logger.Errorf("route(retry=%d) %s", i, err)
+		log.ErrorS("router", fmt.Sprintf("route(retry=%d) %s", i, err))
 	}
 
 	return

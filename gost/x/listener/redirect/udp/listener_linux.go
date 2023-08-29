@@ -13,6 +13,7 @@ import (
 
 	"proxy_forwarder/gost/core/common/bufpool"
 	xnet "proxy_forwarder/gost/x/internal/net"
+	"proxy_forwarder/log"
 
 	"golang.org/x/sys/unix"
 )
@@ -22,10 +23,10 @@ func (l *redirectListener) listenUDP(addr string) (*net.UDPConn, error) {
 		Control: func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
 				if err := unix.SetsockoptInt(int(fd), unix.SOL_IP, unix.IP_TRANSPARENT, 1); err != nil {
-					l.logger.Errorf("SetsockoptInt(SOL_IP, IP_TRANSPARENT, 1): %v", err)
+					log.ErrorS("listener", fmt.Sprintf("SetsockoptInt(SOL_IP, IP_TRANSPARENT, 1): %v", err))
 				}
 				if err := unix.SetsockoptInt(int(fd), unix.SOL_IP, unix.IP_RECVORIGDSTADDR, 1); err != nil {
-					l.logger.Errorf("SetsockoptInt(SOL_IP, IP_RECVORIGDSTADDR, 1): %v", err)
+					log.ErrorS("listener", fmt.Sprintf("SetsockoptInt(SOL_IP, IP_RECVORIGDSTADDR, 1): %v", err))
 				}
 			})
 		},
@@ -47,12 +48,14 @@ func (l *redirectListener) accept() (conn net.Conn, err error) {
 	b := bufpool.Get(l.md.readBufferSize)
 
 	n, raddr, dstAddr, err := readFromUDP(l.ln, *b)
+	logSrc := raddr.String()
+	logDst := dstAddr.String()
 	if err != nil {
-		l.logger.Error(err)
+		log.ConnError("listener", logSrc, logDst, err)
 		return
 	}
 
-	l.logger.Infof("%s >> %s", raddr.String(), dstAddr.String())
+	log.ConnDebug("listener", logSrc, logDst, "establishing")
 
 	network := "udp"
 	if xnet.IsIPv4(l.options.Addr) {
@@ -60,7 +63,7 @@ func (l *redirectListener) accept() (conn net.Conn, err error) {
 	}
 	c, err := dialUDP(network, dstAddr, raddr)
 	if err != nil {
-		l.logger.Error(err)
+		log.ConnError("listener", logSrc, logDst, err)
 		return
 	}
 

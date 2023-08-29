@@ -76,7 +76,6 @@ func NewResolver(nameservers []NameServer, opts ...Option) (resolverpkg.Resolver
 			exchanger.RouterOption(
 				chain.NewRouter(
 					chain.ChainRouterOption(server.Chain),
-					chain.LoggerRouterOption(options.logger),
 				),
 			),
 			exchanger.TimeoutOption(server.Timeout),
