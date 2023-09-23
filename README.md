@@ -17,7 +17,7 @@ For more information about Squid see: [Superstes Wiki - Squid](https://wiki.supe
 
 ## How does it work?
 
-This tool is based on [go-gost](https://gost.run/en/tutorials/redirect/) but I stripped all unecessary features/functions/dependencies from it.
+This tool is based on [go-gost](https://gost.run/en/tutorials/redirect/) but was stripped of all features/dependencies that are unnecessary to perform this task.
 
 See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gost.html)
 
@@ -63,7 +63,7 @@ These are the main two files that cover the logic:
   env GOOS=linux GOARCH=amd64 bash scripts/build.sh
 
   # use 'CGO_ENABLED' if you see this error on the target system:
-  > error "/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32'" on target system
+  > error "/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32'"
 
   env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 bash scripts/build.sh
   ```
@@ -165,7 +165,7 @@ A default linux user with `/usr/sbin/nologin` as shell is enough.
 
 ### TPROXY
 
-If you want to use TPROXY to redirect the traffic - the service user needs the privilege to set `` on its sockets.
+If you want to use TPROXY to redirect the traffic - the service user needs the privilege to set `cap_net_raw` on its sockets.
 
 The [CAP_NET_RAW](https://man7.org/linux/man-pages/man7/capabilities.7.html) may be needed for this:
 
@@ -198,7 +198,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/proxy_forwarder -P 4128 -F http://192.168.1.20:3128
+ExecStart=/usr/local/bin/proxy_forwarder -P 4128 -F http://192.168.1.20:3128 -no-log-time
 User=proxy_forwarder
 Group=proxy_forwarder
 Restart=on-failure
