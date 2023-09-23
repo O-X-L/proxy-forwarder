@@ -52,28 +52,9 @@ These are the main two files that cover the logic:
 
 ----
 
+## Install
 
-## Build
-
-* [Install go](https://go.dev/doc/install)
-* Download this repository
-* Build the binary
-
-  ```bash
-  env GOOS=linux GOARCH=amd64 bash scripts/build.sh
-
-  # use 'CGO_ENABLED' if you see this error on the target system:
-  > error "/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32'"
-
-  env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 bash scripts/build.sh
-  ```
-
-* Copy the new binary to the target host(s)
-* Run
-
-  ```bash
-  proxy_forwarder -P 4138 -F http://192.168.10.20:3128
-  ```
+You can download the binary for most mainstream systems [from the releases](https://github.com/superstes/proxy-forwarder/releases)!
 
 ----
 
@@ -211,3 +192,27 @@ SyslogIdentifier=proxy_forwarder
 [Install]
 WantedBy=multi-user.target
 ```
+
+----
+
+## Build
+
+* [Install go](https://go.dev/doc/install)
+* Download this repository
+* Build the binary
+
+  ```bash
+  env GOOS=linux GOARCH=amd64 bash scripts/build.sh
+
+  # use 'CGO_ENABLED' if you see this error on the target system:
+  > error "/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32'"
+
+  env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 bash scripts/build.sh
+  ```
+
+* Copy the new binary to the target host(s)
+* Run
+
+  ```bash
+  proxy_forwarder -P 4138 -F http://192.168.10.20:3128
+  ```
