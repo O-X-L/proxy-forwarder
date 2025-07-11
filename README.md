@@ -7,19 +7,17 @@ This tool is specifically designed to solve a problem when using proxy servers:
 * Some proxy servers (_like Squid_) do not support redirecting the traffic using DNAT
 
 
-<a href="https://wiki.superstes.eu/en/latest/1/network/squid.html#transparent-proxy">
+<a href="https://docs.o-x-l.com/proxy/forward_squid.html#transparent-proxy">
 <img src="https://github.com/superstes/proxy-forwarder/blob/latest/docs/squid_remote.png" alt="Remote Proxy Server" width="600"/>
 </a>
 
-For more information about Squid see: [Superstes Wiki - Squid](https://wiki.superstes.eu/en/latest/1/network/squid.html)
+For more information about Squid see: [OXL Docs - Squid](https://docs.o-x-l.com/proxy/forward_squid.html)
 
 ----
 
 ## How does it work?
 
 This tool is based on [go-gost](https://gost.run/en/tutorials/redirect/) but was stripped of all features/dependencies that are unnecessary to perform this task.
-
-See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gost.html)
 
 ### Usage
 
@@ -40,7 +38,7 @@ See also: [gost documentation](https://wiki.superstes.eu/en/latest/1/network/gos
 * Allow you to redirect traffic to the forwarder using:
 
   * Destination NAT (_default_)
-  * or [TProxy Mode](https://docs.kernel.org/networking/tproxy.html) (see also: [extended documentation](https://wiki.superstes.eu/en/latest/1/network/nftables.html#tproxy))
+  * or [TProxy Mode](https://docs.kernel.org/networking/tproxy.html) (see also: [extended documentation](https://docs.o-x-l.com/firewall/nftables_tproxy.html#remote-proxy-problem))
 
 * Forward the traffic to the server defined using the `-F` flag
 
