@@ -75,6 +75,9 @@ func init() {
 	var noLogTime bool
 	listenerParams := "?sniffing=true"
 
+    fmt.Println("PROJECT: github.com/O-X-L/proxy-forwarder (MIT, © OXL IT Service 2025)")
+    fmt.Printf("FORKED FROM: github.com/go-gost/gost (MIT, © ginuerzh 2016)\n\n")
+
 	flag.StringVar(&listenPort, "P", "", "Listen port")
 	flag.StringVar(&forwardProxy, "F", "", "Proxy server to forward the traffic to")
 	flag.BoolVar(&tproxyMode, "T", false, "Run in TProxy mode")
@@ -86,7 +89,7 @@ func init() {
 	flag.Parse()
 
 	if printVersion {
-		fmt.Printf("\nProxy-Forwarder Version: %s\nGost Version (forked from): %s\n\n", meta.VERSION_FWD, meta.VERSION_GOST)
+		fmt.Printf("Proxy-Forwarder Version: %s\nForked from Gost-Version: %s\n\n", meta.VERSION_FWD, meta.VERSION_GOST)
 		os.Exit(0)
 	}
 
