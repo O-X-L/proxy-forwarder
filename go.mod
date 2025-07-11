@@ -1,6 +1,6 @@
 module proxy_forwarder
 
-go 1.20
+go 1.24
 
 require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137

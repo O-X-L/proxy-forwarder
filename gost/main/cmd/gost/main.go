@@ -86,7 +86,7 @@ func init() {
 	flag.Parse()
 
 	if printVersion {
-		fmt.Printf("\nProxy-Forwarder Version: %s\nGost Version: %s\n\n", meta.VERSION_FWD, meta.VERSION_GOST)
+		fmt.Printf("\nProxy-Forwarder Version: %s\nGost Version (forked from): %s\n\n", meta.VERSION_FWD, meta.VERSION_GOST)
 		os.Exit(0)
 	}
 

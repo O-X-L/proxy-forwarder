@@ -1,14 +1,34 @@
 #!/bin/bash
 
-OUT_BIN='/tmp/proxy_forwarder'
+set -eo pipefail
+
+GO_VERSION="$(head -n3 < 'go.mod' | tail -n1 | cut -d ' ' -f2)"
+
+if [ -z "$GO_BIN" ]
+then
+  GO_BIN='go'
+fi
+
+if ! $GO_BIN version | grep -q "$GO_VERSION"
+then
+  echo "ERROR: GO is not of required version '${GO_VERSION}'!"
+  exit 1
+fi
+
+set -u
 
 cd "$(dirname "$0")/.."
-root_path=$(pwd)
-cd "${root_path}/gost/main/cmd/gost/"
+PATH_BUILD="$(pwd)/build"
+mkdir -p "$PATH_BUILD"
 
-go build
-mv gost "$OUT_BIN"
+echo '### DOWNLOADING DEPENDENCIES ###'
+$GO_BIN mod tidy
 
-cd "$root_path"
+FILE_BUILD="${PATH_BUILD}/proxy-forwarder"
 
-echo "Binary created: '${OUT_BIN}'"
+echo ''
+echo '### BUILDING ###'
+$GO_BIN build -o "$FILE_BUILD" ./gost/main/cmd/gost/
+
+echo ''
+echo "DONE: ${FILE_BUILD}"
