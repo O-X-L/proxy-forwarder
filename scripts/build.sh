@@ -36,7 +36,7 @@ fi
 
 set -u
 
-cd "$(dirname "$0")/.."
+cd "$PATH_REPO"
 PATH_BUILD="$(pwd)/build"
 mkdir -p "$PATH_BUILD"
 

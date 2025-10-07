@@ -103,16 +103,20 @@ http_access allow CONNECT step1
 Full example when using 'TProxy' mode: [NFTables - TProxy](https://gist.github.com/superstes/6b7ed764482e4a8a75334f269493ac2e)
 
 ```bash
+# we expect you to have a table 'filter' of type 'inet'
+sudo nft list ruleset
+
 # whole input/forward traffic
-nft 'add chain nat prerouting { type nat hook prerouting priority -100; }'
-nft 'add rule nat prerouting tcp dport { 80, 443 } dnat to 127.0.0.1:3128'
+sudo nft 'add chain inet filter prerouting_dnat { type nat hook prerouting priority -100; }'
+sudo nft 'add rule inet filter prerouting_dnat tcp dport { 80, 443 } dnat to 127.0.0.1:3128'
 
 # whole output traffic - excluding the traffic for the proxy-forwarder itself (anti-loop)
-nft 'add chain nat output { type nat hook output priority -100; }'
-nft 'add rule nat output tcp dport { 80, 443 } meta skuid != 1100 dnat to 127.0.0.1:3128'
+sudo nft 'add chain inet filter output_dnat { type nat hook output priority -100; }'
+sudo nft 'add rule inet filter output_dnat tcp dport { 80, 443 } meta skuid != 1100 dnat to 127.0.0.1:3128'
 
 # only output-traffic for one user to specific target (nice for testing purposes)
-nft 'add rule nat output meta l4proto tcp ip daddr 135.181.170.219 meta skuid 1000 dnat to 127.0.0.1:3128'
+sudo nft 'add rule inet filter output_dnat meta l4proto tcp ip daddr 1.1.1.1 dnat to 127.0.0.1:3128'
+sudo nft 'add rule inet filter output_dnat meta l4proto tcp ip6 daddr 2606:4700:4700::1111 dnat to [::1]:3128'
 ```
 
 ### IPTables

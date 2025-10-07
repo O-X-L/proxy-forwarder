@@ -1,0 +1,1 @@
+https://github.com/O-X-L/squid-openssl-docker
