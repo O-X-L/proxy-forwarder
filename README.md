@@ -1,5 +1,7 @@
 # Proxy Forwarder
 
+[![Test](https://github.com/O-X-L/proxy-forwarder/actions/workflows/test.yml/badge.svg?branch=latest)](https://github.com/O-X-L/proxy-forwarder/actions/workflows/test.yml)
+
 This tool is specifically designed to solve a problem when using proxy servers:
 
 * Setting the environment-variables 'HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy' and 'https_proxy' for all applications and HTTP-clients may be problematic/too inconsistent
