@@ -7,26 +7,32 @@ import (
 )
 
 func log(lvl string, pkg string, msg string) {
+    if msg != "" {
+        msg = fmt.Sprintf(" | %s", msg)
+    }
 	if meta.LOG_TIME {
 		fmt.Printf(
-			"%s | %s | %s | %s\n",
+			"%s | %s | %s%s\n",
 			time.Now().Format(meta.LOG_TIME_FORMAT),
 			lvl, pkg, msg,
 		)
 	} else {
-		fmt.Printf("%s | %s | %s\n", lvl, pkg, msg)
+		fmt.Printf("%s | %s%s\n", lvl, pkg, msg)
 	}
 }
 
 func logConn(lvl string, pkg string, src string, dst string, msg string) {
+    if msg != "" {
+        msg = fmt.Sprintf(" | %s", msg)
+    }
 	if meta.LOG_TIME {
 		fmt.Printf(
-			"%s | %s | %s | %s <=> %s | %s\n",
+			"%s | %s | %s | %s <=> %s%s\n",
 			time.Now().Format(meta.LOG_TIME_FORMAT),
 			lvl, pkg, src, dst, msg,
 		)
 	} else {
-		fmt.Printf("%s | %s | %s <=> %s | %s\n", lvl, pkg, src, dst, msg)
+		fmt.Printf("%s | %s | %s <=> %s%s\n", lvl, pkg, src, dst, msg)
 	}
 }
 

@@ -72,9 +72,9 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 	defer cc.Close()
 
 	t := time.Now()
-	log.ConnInfo("handler", logSrc, logDst, "connection established")
+	log.ConnInfo("handler", logSrc, logDst, "")
 	netpkg.Transport(conn, cc)
-	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
+	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("closed after %s", time.Since(t)))
 
 	return nil
 }

@@ -119,9 +119,9 @@ func (h *redirectHandler) Handle(ctx context.Context, conn net.Conn, opts ...han
 	defer cc.Close()
 
 	t := time.Now()
-	log.ConnInfo("handler", logSrc, logDst, "connection established")
+	log.ConnInfo("handler", logSrc, logDst, "")
 	netpkg.Transport(rw, cc)
-	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
+	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("closed after %s", time.Since(t)))
 
 	return nil
 }
@@ -167,7 +167,7 @@ func (h *redirectHandler) handleHTTP(ctx context.Context, rw io.ReadWriter, radd
 		log.ConnError("handler", logSrc, logDst, err)
 		return err
 	}
-	log.ConnInfo("handler", logSrc, logDst, "connection established")
+	log.ConnInfo("handler", logSrc, logDst, "")
 
 	var rw2 io.ReadWriter = cc
 	if meta.DEBUG {
@@ -212,9 +212,9 @@ func (h *redirectHandler) handleHTTPS(ctx context.Context, rw io.ReadWriter, rad
 	defer cc.Close()
 
 	t := time.Now()
-	log.ConnInfo("handler", logSrc, logDst, "connection established")
+	log.ConnInfo("handler", logSrc, logDst, "")
 	netpkg.Transport(xio.NewReadWriter(io.MultiReader(buf, rw), rw), cc)
-	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("connection closed after %s", time.Since(t)))
+	log.ConnDebug("handler", logSrc, logDst, fmt.Sprintf("closed after %s", time.Since(t)))
 
 	return nil
 }

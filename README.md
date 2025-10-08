@@ -26,17 +26,18 @@ This tool is based on [go-gost](https://gost.run/en/tutorials/redirect/) but was
 ```bash
   -P 'Listen port' (required)
   -F 'Proxy server to forward the traffic to' (required, Example: 'http://192.168.0.1:3128')
-  -T 'Run in TProxy mode' (default: false)
+  -T 'Enable TProxy mode'
   -M 'Mark to set for TProxy traffic' (default: None)
   -V 'Show version'
   -D 'Enable debug mode'
+  -U 'Enable UDP listeners'
   -metrics 'Set a metrics service address (prometheus)' (Example: '127.0.0.1:9000', Docs: 'https://gost.run/en/tutorials/metrics/')
   -no-log-time 'Do not add timestamp to logs'  # use when systemd service
 ```
 
 ### It does
 
-* Bind to localhost (_127.0.0.1 & ::1_) for tcp & udp
+* Bind to localhost (_127.0.0.1 & ::1_) for TCP
 * Allow you to redirect traffic to the forwarder using:
 
   * Destination NAT (_default_)

@@ -73,6 +73,7 @@ func init() {
 	var tproxyMark string
 	var forwardProxy string
 	var noLogTime bool
+	var listenUDP bool
 	listenerParams := "?sniffing=true"
 
     fmt.Println("PROJECT: github.com/O-X-L/proxy-forwarder (MIT, © OXL IT Service 2025)")
@@ -84,6 +85,7 @@ func init() {
 	flag.StringVar(&tproxyMark, "M", "", "Mark to set for TPRoxy traffic")
 	flag.BoolVar(&printVersion, "V", false, "Show version")
 	flag.BoolVar(&meta.DEBUG, "D", false, "Enable debug mode")
+	flag.BoolVar(&listenUDP, "U", false, "Enable UDP listeners")
 	flag.StringVar(&metricsAddr, "metrics", "", "Set a metrics service address (prometheus)")
 	flag.BoolVar(&noLogTime, "no-log-time", false, "Do not add timestamp to logs")
 	flag.Parse()
@@ -124,13 +126,20 @@ func init() {
 		}
 	}
 
-	services = []string{
-		fmt.Sprintf("redirect://127.0.0.1:%s%s", listenPort, listenerParams),
-		fmt.Sprintf("redirect://[::1]:%s%s", listenPort, listenerParams),
-		fmt.Sprintf("redu://127.0.0.1:%s%s", listenPort, listenerParams),
-		fmt.Sprintf("redu://[::1]:%s%s", listenPort, listenerParams),
-	}
+    if listenUDP {
+        services = []string{
+            fmt.Sprintf("redirect://127.0.0.1:%s%s", listenPort, listenerParams),
+            fmt.Sprintf("redirect://[::1]:%s%s", listenPort, listenerParams),
+            fmt.Sprintf("redu://127.0.0.1:%s%s", listenPort, listenerParams),
+            fmt.Sprintf("redu://[::1]:%s%s", listenPort, listenerParams),
+        }
 
+    } else {
+        services = []string{
+            fmt.Sprintf("redirect://127.0.0.1:%s%s", listenPort, listenerParams),
+            fmt.Sprintf("redirect://[::1]:%s%s", listenPort, listenerParams),
+        }
+    }
 }
 
 func main() {
