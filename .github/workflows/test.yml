@@ -39,7 +39,7 @@ jobs:
 
       - name: Starting squid
         run: |
-          docker run -d --volume /tmp/squid/:/var/log/squid/ squid
+          docker run -d --network=host --volume /tmp/squid/:/var/log/squid/ squid
           # wait for init to finish
           sleep 5
 

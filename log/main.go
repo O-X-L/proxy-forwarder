@@ -27,12 +27,12 @@ func logConn(lvl string, pkg string, src string, dst string, msg string) {
     }
 	if meta.LOG_TIME {
 		fmt.Printf(
-			"%s | %s | %s | %s <=> %s%s\n",
+			"%s | %s | %s | %s => %s%s\n",
 			time.Now().Format(meta.LOG_TIME_FORMAT),
 			lvl, pkg, src, dst, msg,
 		)
 	} else {
-		fmt.Printf("%s | %s | %s <=> %s%s\n", lvl, pkg, src, dst, msg)
+		fmt.Printf("%s | %s | %s => %s%s\n", lvl, pkg, src, dst, msg)
 	}
 }
 

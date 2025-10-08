@@ -21,6 +21,14 @@ For more information about Squid see: [OXL Docs - Squid](https://docs.o-x-l.com/
 
 This tool is based on [go-gost](https://gost.run/en/tutorials/redirect/) but was stripped of all features/dependencies that are unnecessary to perform this task.
 
+### Support
+
+* Layer 3: IPv4 & IPv6
+* Layer 4: TCP
+* Application: redirect of HTTP & HTTPS
+* HTTP Versions: HTTP/1.0, HTTP/1.1, HTTP/2.0
+* Target-Proxy Protocols: HTTP, HTTPS
+
 ### Usage
 
 ```bash
