@@ -46,15 +46,15 @@ jobs:
       - name: Configuring NAT
         run: |
           runner_uid="$UID"
-          sudo nft list ruleset
           sudo nft 'add table inet test'
           sudo nft 'add chain inet test output_dnat { type nat hook output priority -100; }'
           sudo nft "add rule inet test output_dnat meta l4proto tcp ip daddr 1.1.1.1 meta skuid $runner_uid dnat to 127.0.0.1:4128"
           sudo nft "add rule inet test output_dnat meta l4proto tcp ip6 daddr 2606:4700:4700::1111 meta skuid $runner_uid dnat to [::1]:4129"
+          sudo nft list ruleset
 
       - name: Run tests
         run: |
-          sudo build/proxy-forwarder-linux-amd64 -P 4128 -F http://127.0.0.1:3128 > /tmp/fwd1.log &
-          sudo build/proxy-forwarder-linux-amd64 -P 4129 -F http://[::1]:3128 > /tmp/fwd2.log &
+          sudo build/proxy-forwarder-linux-amd64 -P 4128 -F http://127.0.0.1:3128 &
+          sudo build/proxy-forwarder-linux-amd64 -P 4129 -F http://[::1]:3128 &
 
           bash scripts/test.sh
