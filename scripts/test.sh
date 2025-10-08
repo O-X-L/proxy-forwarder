@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# ipv6 needs to be supported on the testing-host - seems github does not :(
+if [ -z "$IP6" ]
+then
+  IP6=0
+fi
+
 set -uo pipefail
 
 FAIL_FILE='/tmp/.failed'
@@ -12,7 +18,10 @@ TEST_DOMAIN2='oxl.at'
 
 echo 'INFO: Setting /etc/hosts'
 echo "1.1.1.1 ${TEST_DOMAIN} ${TEST_DOMAIN2}" | sudo tee -a /etc/hosts
-echo "2606:4700:4700::1111 ${TEST_DOMAIN} ${TEST_DOMAIN2}" | sudo tee -a /etc/hosts
+if [[ "$IP6" == "1" ]]
+then
+  echo "2606:4700:4700::1111 ${TEST_DOMAIN} ${TEST_DOMAIN2}" | sudo tee -a /etc/hosts
+fi
 
 function run_test() {
   nr="$1"
@@ -67,18 +76,24 @@ function run_test() {
 run_test 1 "http://${TEST_DOMAIN}" "--ipv4 --http1.0" "$RES_REDIRECT"
 run_test 2 "http://${TEST_DOMAIN}" "--ipv4 --http1.1" "$RES_REDIRECT"
 run_test 3 "http://${TEST_DOMAIN}" "--ipv4 --http2" "$RES_REDIRECT"
-run_test 4 "http://${TEST_DOMAIN}" "--ipv6 --http1.0" "$RES_REDIRECT"
-run_test 5 "http://${TEST_DOMAIN}" "--ipv6 --http1.1" "$RES_REDIRECT"
-run_test 6 "http://${TEST_DOMAIN}" "--ipv6 --http2" "$RES_REDIRECT"
+if [[ "$IP6" == "1" ]]
+then
+  run_test 4 "http://${TEST_DOMAIN}" "--ipv6 --http1.0" "$RES_REDIRECT"
+  run_test 5 "http://${TEST_DOMAIN}" "--ipv6 --http1.1" "$RES_REDIRECT"
+  run_test 6 "http://${TEST_DOMAIN}" "--ipv6 --http2" "$RES_REDIRECT"
+fi
 
 run_test 7 "http://${TEST_DOMAIN2}" "--ipv4 --http1.1" "$RES_DENIED"
 
 run_test 8 "https://${TEST_DOMAIN}" "--ipv4 --http1.0" "$RES_SUCCESS"
 run_test 9 "https://${TEST_DOMAIN}" "--ipv4 --http1.1" "$RES_SUCCESS"
 run_test 10 "https://${TEST_DOMAIN}" "--ipv4 --http2" "$RES_SUCCESS"
-run_test 11 "https://${TEST_DOMAIN}" "--ipv6 --http1.0" "$RES_SUCCESS"
-run_test 12 "https://${TEST_DOMAIN}" "--ipv6 --http1.1" "$RES_SUCCESS"
-run_test 13 "https://${TEST_DOMAIN}" "--ipv6 --http2" "$RES_SUCCESS"
+if [[ "$IP6" == "1" ]]
+then
+  run_test 11 "https://${TEST_DOMAIN}" "--ipv6 --http1.0" "$RES_SUCCESS"
+  run_test 12 "https://${TEST_DOMAIN}" "--ipv6 --http1.1" "$RES_SUCCESS"
+  run_test 13 "https://${TEST_DOMAIN}" "--ipv6 --http2" "$RES_SUCCESS"
+fi
 
 run_test 14 "https://${TEST_DOMAIN2}" "--ipv4 --http1.1" "$RES_DENIED_TLS"
 
