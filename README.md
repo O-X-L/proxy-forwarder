@@ -1,5 +1,13 @@
 # Proxy Forwarder
 
+<p align="center">
+    <a title="Support this Project (Donate, Support-Licenses)" href="https://shop.oxl.app/collections/open-source">
+        <img src="https://files.oxl.at/img/badge-oss-support.svg" alt="Support Badge (Donate, Support-Licenses)"/>
+    </a>
+</p>
+
+----
+
 [![Test](https://github.com/O-X-L/proxy-forwarder/actions/workflows/test.yml/badge.svg?branch=latest)](https://github.com/O-X-L/proxy-forwarder/actions/workflows/test.yml)
 
 This tool is specifically designed to solve a problem when using proxy servers:
